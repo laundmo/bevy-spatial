@@ -1,0 +1,31 @@
+[package]
+name = "bevy_spatial"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+bevy = { version = "0.7.0"}
+rand = { version = "0.8.5"}
+rstar = "0.9.3"
+kd-tree = "0.4.1"
+typenum = "1.15.0"
+num-traits = "0.2.14"
+
+# dynamic feature default
+[features]
+default = ["fast-compile"]
+fast-compile = ["bevy/dynamic", "bevy/trace"]
+
+# Enable only a small amount of optimization in debug mode
+[profile.dev]
+opt-level = 1
+
+# Enable high optimizations for dependencies (incl. Bevy), but not for our code:
+[profile.dev.package."*"]
+opt-level = 3
+
+[profile.release]
+lto = "fat"
+strip = true
