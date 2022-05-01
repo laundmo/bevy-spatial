@@ -1,5 +1,6 @@
 mod common;
 mod kdtree;
+mod plugin;
 mod resources_components;
 pub mod rtree;
 mod spatial_access;

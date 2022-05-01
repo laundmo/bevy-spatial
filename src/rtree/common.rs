@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use rstar::{RTree, RTreeObject, RTreeParams};
 
-use crate::common::EntityPoint;
+use crate::{common::EntityPoint, plugin::SpatialPlugin};
 
 pub struct RTreeAccess<TComp, RObj, Params>
 where
@@ -15,17 +15,19 @@ where
     pub component_type: PhantomData<TComp>,
 }
 
-impl<T, RObj, Params> Default for RTreeAccess<T, RObj, Params>
+impl<TComp, RObj, Params> From<SpatialPlugin<TComp, RTreeAccess<TComp, RObj, Params>>>
+    for RTreeAccess<TComp, RObj, Params>
 where
     RObj: RTreeObject,
     Params: RTreeParams,
 {
-    fn default() -> Self {
+    fn from(plugin: SpatialPlugin<TComp, RTreeAccess<TComp, RObj, Params>>) -> Self {
         let tree: RTree<RObj, Params> = RTree::new_with_params();
+
         RTreeAccess {
             tree,
-            min_moved: 1.0,
-            recreate_after: 100,
+            min_moved: plugin.min_moved,
+            recreate_after: plugin.recreate_after,
             component_type: PhantomData,
         }
     }

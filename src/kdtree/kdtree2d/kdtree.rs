@@ -1,35 +1,12 @@
-use std::marker::PhantomData;
-
 use bevy::{math::Vec3Swizzles, prelude::*};
 use kd_tree::{KdPoint, KdTree};
 
-use crate::{common::EntityPoint2D, spatial_access::TrackedQuery, SpatialAccess};
-
-pub struct KDTreeAccess<TComp, KDItem>
-where
-    KDItem: KdPoint,
-{
-    pub tree: KdTree<KDItem>,
-    pub min_moved: f32,
-    pub component_type: PhantomData<TComp>,
-}
+use crate::{
+    common::EntityPoint2D, kdtree::common::KDTreeAccess, spatial_access::TrackedQuery,
+    SpatialAccess,
+};
 
 pub type KDTreeAccess2D<TComp> = KDTreeAccess<TComp, EntityPoint2D>;
-
-impl<TComp, KDItem> Default for KDTreeAccess<TComp, KDItem>
-where
-    KDItem: KdPoint,
-    <KDItem as KdPoint>::Scalar: num_traits::Float,
-{
-    fn default() -> Self {
-        let tree: KdTree<KDItem> = KdTree::<KDItem>::build_by_ordered_float(vec![]);
-        KDTreeAccess {
-            tree,
-            min_moved: 1.0,
-            component_type: PhantomData,
-        }
-    }
-}
 
 // implement `KdPoint` for your item type.
 impl KdPoint for EntityPoint2D {

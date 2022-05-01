@@ -4,10 +4,12 @@ mod rtree3d;
 
 pub use rstar::{DefaultParams, RStarInsertionStrategy, RTreeParams};
 
-pub use self::{
-    rtree2d::{plugin::RTreePlugin2D, rtree_obj::TreeAccess2D},
-    rtree3d::{plugin::RTreePlugin3D, rtree_obj::TreeAccess3D},
-};
+use crate::plugin::SpatialPlugin;
+
+pub use self::{rtree2d::TreeAccess2D, rtree3d::TreeAccess3D};
+
+pub type RTreePlugin2D<TComp, Params> = SpatialPlugin<TComp, TreeAccess2D<TComp, Params>>;
+pub type RTreePlugin3D<TComp, Params> = SpatialPlugin<TComp, TreeAccess3D<TComp, Params>>;
 
 pub struct MovingObjectsParams;
 
