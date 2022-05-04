@@ -39,7 +39,7 @@ fn (tree: Res<NNTree>){
 
 For more details on usage see [Examples](https://github.com/laundmo/bevy-spatial/tree/main/examples)
 
-## comaptible bey versions
+## compatible bevy versions
 
 | bevy | bevy_spatial |
 | ---- | ------------ |
