@@ -2,7 +2,7 @@
 name = "bevy_spatial"
 description = "A crate for tracking bevy entities in spatial indices."
 documentation = "https://docs.rs/bevy_spatial"
-version = "0.1.0"
+version = "0.1.1"
 license = "MIT OR Apache-2.0"
 edition = "2021"
 keywords = ["gamedev", "bevy", "spatial", "kdtree", "rtree"]

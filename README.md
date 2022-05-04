@@ -30,7 +30,7 @@ fn main() {
 type NNTree = KDTreeAccess2D<TrackedByKDTree>; // type alias for later
 
 fn (tree: Res<NNTree>){
-    if let Some((pos, entity)) = treeaccess.nearest_neighbour(Vec2::ZERO) {
+    if let Some((pos, entity)) = tree.nearest_neighbour(Vec2::ZERO) {
         // pos: Vec3
         // do something with the nearest entity here
     }
