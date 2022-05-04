@@ -6,7 +6,7 @@ version = "0.1.0"
 license = "MIT OR Apache-2.0"
 edition = "2021"
 keywords = ["gamedev", "bevy", "spatial", "kdtree", "rtree"]
-repository = "https://github.com/laundmo/bevy_spatial"
+repository = "https://github.com/laundmo/bevy-spatial"
 readme = "README.md"
 authors = ["Laurin Schmidt"]
 
