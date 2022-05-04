@@ -6,10 +6,10 @@ pub use rstar::{DefaultParams, RStarInsertionStrategy, RTreeParams};
 
 use crate::plugin::SpatialPlugin;
 
-pub use self::{rtree2d::TreeAccess2D, rtree3d::TreeAccess3D};
+pub use self::{rtree2d::RTreeAccess2D, rtree3d::RTreeAccess3D};
 
-pub type RTreePlugin2D<TComp, Params> = SpatialPlugin<TComp, TreeAccess2D<TComp, Params>>;
-pub type RTreePlugin3D<TComp, Params> = SpatialPlugin<TComp, TreeAccess3D<TComp, Params>>;
+pub type RTreePlugin2D<TComp, Params> = SpatialPlugin<TComp, RTreeAccess2D<TComp, Params>>;
+pub type RTreePlugin3D<TComp, Params> = SpatialPlugin<TComp, RTreeAccess3D<TComp, Params>>;
 
 pub struct MovingObjectsParams;
 

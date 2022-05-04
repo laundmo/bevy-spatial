@@ -26,7 +26,7 @@ where
     /// noop due to kd-tree not supporting edits.
     fn update_moved(
         &mut self,
-        mut set: ParamSet<(
+        mut _set: ParamSet<(
             Query<TrackedQuery<Self::TComp>, Changed<Transform>>,
             Query<TrackedQuery<Self::TComp>>,
         )>,
@@ -35,9 +35,9 @@ where
 
     fn add_added(
         &mut self,
-        mut commands: Commands,
+        mut _commands: Commands,
         all_query: Query<(Entity, &Transform), With<Self::TComp>>,
-        added_query: Query<(Entity, &Transform), Added<Self::TComp>>,
+        _added_query: Query<(Entity, &Transform), Added<Self::TComp>>,
     ) {
         let all: Vec<(Vec3, Entity)> = all_query.iter().map(|i| (i.1.translation, i.0)).collect();
 
@@ -45,7 +45,7 @@ where
     }
 
     /// noop due to kd-tree not supporting edits.
-    fn delete(&mut self, removed: RemovedComponents<Self::TComp>) {}
+    fn delete(&mut self, _removed: RemovedComponents<Self::TComp>) {}
 
     // needs impl due to 2d ignoring the z part of vec3
     fn distance_squared(&self, loc_a: Vec3, loc_b: Vec3) -> f32 {
@@ -89,15 +89,15 @@ where
     }
 
     /// noop due to kd-tree not supporting edits.
-    fn add_point(&mut self, point: (Vec3, Entity)) {}
+    fn add_point(&mut self, _point: (Vec3, Entity)) {}
 
     /// noop due to kd-tree not supporting edits.
-    fn remove_point(&mut self, point: (Vec3, Entity)) -> bool {
+    fn remove_point(&mut self, _point: (Vec3, Entity)) -> bool {
         false
     }
 
     /// awlways false due to kd-tree not supporting edits.
-    fn remove_entity(&mut self, entity: Entity) -> bool {
+    fn remove_entity(&mut self, _entity: Entity) -> bool {
         false
     }
     fn size(&self) -> usize {

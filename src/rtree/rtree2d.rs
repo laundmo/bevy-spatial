@@ -3,9 +3,9 @@ use rstar::{PointDistance, RTree, RTreeObject, RTreeParams, AABB};
 
 use crate::{common::EntityPoint2D, rtree::common::RTreeAccess, spatial_access::SpatialAccess};
 
-pub type TreeAccess2D<TComp, Params> = RTreeAccess<TComp, EntityPoint2D, Params>;
+pub type RTreeAccess2D<TComp, Params> = RTreeAccess<TComp, EntityPoint2D, Params>;
 
-impl<TComp, Params> SpatialAccess for TreeAccess2D<TComp, Params>
+impl<TComp, Params> SpatialAccess for RTreeAccess2D<TComp, Params>
 where
     Params: RTreeParams,
     TComp: Component + Sync + 'static,

@@ -3,11 +3,13 @@ use bevy::{
     math::Vec3Swizzles,
     prelude::*,
 };
-use bevy_spatial::{MovingObjectsParams, RTreePlugin2D, SpatialAccess, TreeAccess2D};
+use bevy_spatial::{KDTreeAccess2D, KDTreePlugin2D, SpatialAccess};
 
+// marker for entities tracked by the KDTree
 #[derive(Component)]
 struct NearestNeighbourComponent;
 
+// marker for the "cursor" entity
 #[derive(Component)]
 struct Cursor;
 
@@ -15,7 +17,7 @@ fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         // Add the plugin, which takes the tracked component as a generic.
-        .add_plugin(RTreePlugin2D::<NearestNeighbourComponent, MovingObjectsParams> { ..default() })
+        .add_plugin(KDTreePlugin2D::<NearestNeighbourComponent> { ..default() })
         .add_plugin(LogDiagnosticsPlugin::default())
         .add_plugin(FrameTimeDiagnosticsPlugin::default())
         .add_startup_system(setup)
@@ -28,7 +30,7 @@ fn main() {
 }
 
 // type alias for easier usage later
-type NNTree = TreeAccess2D<NearestNeighbourComponent, MovingObjectsParams>;
+type NNTree = KDTreeAccess2D<NearestNeighbourComponent>;
 
 fn setup(mut commands: Commands) {
     commands.spawn_bundle(OrthographicCameraBundle::new_2d());
@@ -49,8 +51,8 @@ fn setup(mut commands: Commands) {
         custom_size: Some(Vec2::new(6.0, 6.0)),
         ..default()
     };
-    for x in -150..150 {
-        for y in -150..150 {
+    for x in -100..100 {
+        for y in -100..100 {
             commands
                 .spawn()
                 .insert(NearestNeighbourComponent)
@@ -76,8 +78,8 @@ fn mouse(
         pos.x = pos.x - win.width() / 2.0;
         pos.y = pos.y - win.height() / 2.0;
         let mut transform = query.single_mut();
-        if let Some(nearest) = treeaccess.nearest_neighbour(pos.extend(0.0)) {
-            transform.translation = nearest.0;
+        if let Some((pos, _)) = treeaccess.nearest_neighbour(pos.extend(0.0)) {
+            transform.translation = pos.truncate().extend(1.0);
         }
     }
 }

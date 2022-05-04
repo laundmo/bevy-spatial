@@ -3,7 +3,7 @@ use bevy::{
     math::Vec3Swizzles,
     prelude::*,
 };
-use bevy_spatial::{MovingObjectsParams, RTreePlugin3D, SpatialAccess, TreeAccess3D};
+use bevy_spatial::{MovingObjectsParams, RTreeAccess3D, RTreePlugin3D, SpatialAccess};
 
 #[derive(Component)]
 struct NearestNeighbourComponent;
@@ -31,7 +31,7 @@ struct MaterialHandles {
     blue: Handle<StandardMaterial>,
 }
 
-type NNTree = TreeAccess3D<NearestNeighbourComponent, MovingObjectsParams>;
+type NNTree = RTreeAccess3D<NearestNeighbourComponent, MovingObjectsParams>;
 
 fn setup(
     mut commands: Commands,

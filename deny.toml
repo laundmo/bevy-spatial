@@ -1,0 +1,27 @@
+[advisories]
+vulnerability = "deny"
+unmaintained = "deny"
+notice = "deny"
+unsound = "deny"
+ignore = [
+    "RUSTSEC-2020-0056", 
+]
+
+[licenses]
+unlicensed = "deny"
+copyleft = "deny"
+allow-osi-fsf-free = "either"
+default = "deny"
+
+[[licenses.clarify]]
+name = "stretch"
+expression = "MIT"
+license-files = []
+
+[bans]
+multiple-versions = "allow"
+wildcards = "deny"
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"

@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use bevy_spatial::{DefaultParams, RTreePlugin2D, TreeAccess2D};
+use bevy_spatial::{DefaultParams, RTreeAccess2D, RTreePlugin2D};
 
 #[derive(Component)]
 struct NearestNeighbour;
@@ -17,7 +17,7 @@ fn main() {
         .run();
 }
 
-type NNTree = TreeAccess2D<NearestNeighbour, DefaultParams>;
+type NNTree = RTreeAccess2D<NearestNeighbour, DefaultParams>;
 
 fn setup(mut commands: Commands) {
     commands.spawn_bundle(OrthographicCameraBundle::new_2d());
