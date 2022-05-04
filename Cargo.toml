@@ -11,7 +11,7 @@ readme = "README.md"
 authors = ["Laurin Schmidt"]
 
 [dependencies]
-bevy = { version = "0.7.0"}
+bevy = { version = "0.7.0", default-features = false}
 # R*-Tree dependencies
 rstar = { version = "0.9.3", optional = true }
 # KD-Tree dependencies

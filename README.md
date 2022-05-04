@@ -1,8 +1,17 @@
 # bevy_spatial
 
+![](https://i.laundmo.com/tENe0/YIVuweru01.png)
+from the `distance2d` example, colors the elements in a radius around the mouse.
+
 A bevy plugin to track your entities in spatial indexes and query them.
 
-Qucikstart using the `kdtree` feature:
+Currently implemented features:
+|feature|description|
+|-|-|
+|`kdtree`|KD-Tree for spatial lookups which is fully recreated. This is ideal for cases where EVERYTHING is moving.|
+|`rstar`|R\*-Tree for spatial lookups which is updated or recreated based on a threshold of changes. Ideal when most entities are static. |
+
+Quickstart using the `kdtree` feature:
 
 ```rust
 use bevy_spatial::{KDTreeAccess2D, KDTreePlugin2D, SpatialAccess};
@@ -27,6 +36,12 @@ fn (tree: Res<NNTree>){
 ```
 
 For more details on usage see [Examples](https://github.com/laundmo/bevy-spatial/tree/main/examples)
+
+## comaptible bey versions
+
+| bevy | bevy_spatial |
+| ---- | ------------ |
+| 0.7  | 0.1.0        |
 
 ## TODOs and Ideas
 

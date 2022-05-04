@@ -69,6 +69,7 @@ fn setup(mut commands: Commands) {
 }
 
 fn mouse(
+    mut commands: Commands,
     windows: Res<Windows>,
     treeaccess: Res<NNTree>,
     mut query: Query<&mut Transform, With<Cursor>>,
@@ -78,8 +79,9 @@ fn mouse(
         pos.x = pos.x - win.width() / 2.0;
         pos.y = pos.y - win.height() / 2.0;
         let mut transform = query.single_mut();
-        if let Some((pos, _)) = treeaccess.nearest_neighbour(pos.extend(0.0)) {
-            transform.translation = pos.truncate().extend(1.0);
+        if let Some((pos, entity)) = treeaccess.nearest_neighbour(pos.extend(0.0)) {
+            commands.entity(entity).despawn();
+            //transform.translation = pos.truncate().extend(1.0);
         }
     }
 }

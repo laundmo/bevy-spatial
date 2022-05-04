@@ -9,11 +9,15 @@ use crate::{
     SpatialAccess,
 };
 
+/// The core plugin struct which stores metadata for updating and recreating the choosen spatial index.
 pub struct SpatialPlugin<TComp, Access> {
     pub component_type: PhantomData<TComp>,
     pub spatial_access: PhantomData<Access>,
+    /// The minimum distance a entity has to move before its updated in the index. Increase this if small movements do not matter.
     pub min_moved: f32,
+    /// The threshold of changes that have to happend within the same timestep or frame for the index to be completely recreated. After a certain point completely recreating can be more efficient.
     pub recreate_after: usize,
+    /// Optional delay in seconds between update runs for the
     pub timestep: Option<f32>,
 }
 
@@ -34,7 +38,7 @@ impl<TComp, Access> Default for SpatialPlugin<TComp, Access> {
             spatial_access: PhantomData,
             recreate_after: 100,
             min_moved: 1.0,
-            timestep: Some(1.0 / 60.0), // update r-tree 60 times per second default
+            timestep: None,
         }
     }
 }
@@ -48,7 +52,8 @@ where
         let tree_access = Access::from(*self);
 
         app.insert_resource(tree_access)
-            .add_startup_system_to_stage(StartupStage::PostStartup, add_added::<Access>);
+            .add_startup_system_to_stage(StartupStage::PostStartup, add_added::<Access>)
+            .add_system_to_stage(CoreStage::PostUpdate, delete::<Access>);
 
         // decide whether to use the timestep
         if let Some(step) = self.timestep {
@@ -61,13 +66,11 @@ where
                 SystemSet::new()
                     .with_run_criteria(run_if_elapsed::<TComp>)
                     .with_system(add_added::<Access>)
-                    .with_system(update_moved::<Access>)
-                    .with_system(delete::<Access>),
+                    .with_system(update_moved::<Access>),
             );
         } else {
             app.add_system_to_stage(CoreStage::PostUpdate, add_added::<Access>)
-                .add_system_to_stage(CoreStage::PostUpdate, update_moved::<Access>)
-                .add_system_to_stage(CoreStage::PostUpdate, delete::<Access>);
+                .add_system_to_stage(CoreStage::PostUpdate, update_moved::<Access>);
         }
     }
 }

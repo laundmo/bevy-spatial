@@ -119,8 +119,6 @@ where
         }
     }
 
-    // Will need impls
-
     /// Get the squared distance using the calculation that implementation uses.
     /// Mainly a trait method due to 2d structures using Vec3 but ignoring the 3rd dimension for distance calculations.
     fn distance_squared(&self, loc_a: Vec3, loc_b: Vec3) -> f32;

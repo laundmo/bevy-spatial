@@ -1,6 +1,6 @@
 //! A bevy plugin to track your entities in spatial indexes and query them.
 //!
-//! Qucikstart using the `kdtree` feature:
+//! Quickstart using the `kdtree` feature:
 //! ```rust
 //! use bevy_spatial::{KDTreeAccess2D, KDTreePlugin2D, SpatialAccess};
 //!
@@ -45,5 +45,6 @@ pub use self::kdtree::{KDTreeAccess2D, KDTreePlugin2D};
 
 #[cfg(feature = "rstar")]
 pub use self::rtree::{
-    DefaultParams, MovingObjectsParams, RTreeAccess2D, RTreeAccess3D, RTreePlugin2D, RTreePlugin3D,
+    DefaultParams, EfficientInsertParams, RTreeAccess2D, RTreeAccess3D, RTreePlugin2D,
+    RTreePlugin3D,
 };

@@ -8,12 +8,16 @@ use crate::plugin::SpatialPlugin;
 
 pub use self::{rtree2d::RTreeAccess2D, rtree3d::RTreeAccess3D};
 
-pub type RTreePlugin2D<TComp, Params> = SpatialPlugin<TComp, RTreeAccess2D<TComp, Params>>;
-pub type RTreePlugin3D<TComp, Params> = SpatialPlugin<TComp, RTreeAccess3D<TComp, Params>>;
+/// 2D R*-Tree plugin. Can optionally be passed R*-Tree params as a second argument.
+/// See the docs here: https://docs.rs/rstar/latest/rstar/trait.RTreeParams.html
+pub type RTreePlugin2D<TComp, Params = EfficientInsertParams> =
+    SpatialPlugin<TComp, RTreeAccess2D<TComp, Params>>;
+pub type RTreePlugin3D<TComp, Params = EfficientInsertParams> =
+    SpatialPlugin<TComp, RTreeAccess3D<TComp, Params>>;
 
-pub struct MovingObjectsParams;
+pub struct EfficientInsertParams;
 
-impl RTreeParams for MovingObjectsParams {
+impl RTreeParams for EfficientInsertParams {
     const MIN_SIZE: usize = 2;
     const MAX_SIZE: usize = 1000;
     const REINSERTION_COUNT: usize = 1;

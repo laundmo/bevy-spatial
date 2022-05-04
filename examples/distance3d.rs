@@ -3,7 +3,7 @@ use bevy::{
     math::Vec3Swizzles,
     prelude::*,
 };
-use bevy_spatial::{MovingObjectsParams, RTreeAccess3D, RTreePlugin3D, SpatialAccess};
+use bevy_spatial::{EfficientInsertParams, RTreeAccess3D, RTreePlugin3D, SpatialAccess};
 
 #[derive(Component)]
 struct NearestNeighbourComponent;
@@ -14,7 +14,9 @@ struct Cursor;
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-        .add_plugin(RTreePlugin3D::<NearestNeighbourComponent, MovingObjectsParams> { ..default() })
+        .add_plugin(
+            RTreePlugin3D::<NearestNeighbourComponent, EfficientInsertParams> { ..default() },
+        )
         .add_plugin(LogDiagnosticsPlugin::default())
         .add_plugin(FrameTimeDiagnosticsPlugin::default())
         .add_startup_system(setup)
@@ -31,7 +33,7 @@ struct MaterialHandles {
     blue: Handle<StandardMaterial>,
 }
 
-type NNTree = RTreeAccess3D<NearestNeighbourComponent, MovingObjectsParams>;
+type NNTree = RTreeAccess3D<NearestNeighbourComponent, EfficientInsertParams>;
 
 fn setup(
     mut commands: Commands,
