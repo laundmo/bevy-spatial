@@ -24,12 +24,13 @@ struct TrackedByKDTree;
 fn main() {
    App::new()
        .add_plugin(KDTreePlugin2D::<TrackedByKDTree> { ..default() })
+       .add_system(use_neighbour);
    // ...
 }
 
 type NNTree = KDTreeAccess2D<TrackedByKDTree>; // type alias for later
 
-fn (tree: Res<NNTree>){
+fn use_neighbour(tree: Res<NNTree>){
     if let Some((pos, entity)) = tree.nearest_neighbour(Vec2::ZERO) {
         // pos: Vec3
         // do something with the nearest entity here
