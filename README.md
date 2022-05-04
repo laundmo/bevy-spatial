@@ -1,7 +1,7 @@
 # bevy_spatial
 
 <p align="center">
-    <img src="https://i.laundmo.com/tENe0/YIVuweru01.png">
+    <img src="https://i.laundmo.com/tENe0/YIVuweru01.png/raw">
     from the `distance2d` example, colors the elements in a radius around the mouse.
 </p>
 
