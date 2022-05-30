@@ -12,6 +12,7 @@ authors = ["Laurin Schmidt"]
 
 [dependencies]
 bevy = { version = "0.7.0", default-features = false}
+impl-tools = "0.3.1"
 # R*-Tree dependencies
 rstar = { version = "0.9.3", optional = true }
 # KD-Tree dependencies
@@ -26,6 +27,11 @@ kdtree = ["dep:kd-tree", "dep:typenum", "dep:num-traits"]
 
 [dev-dependencies]
 bevy = { version = "0.7.0"}
+criterion = { version = "0.3", features = ["html_reports"] }
+kiddo = "0.2.4"
+kd-tree = "0.4.1"
+kdtree = "0.6.0"
+rand = "0.8.5"
 
 
 [profile.dev]
@@ -33,3 +39,22 @@ opt-level = 1
 
 [profile.dev.package."*"]
 opt-level = 3
+
+# [[bench]]
+# name = "kd-tree"
+# path = "benches/kd-tree.rs"
+# harness = false
+
+# [[bench]]
+# name = "kdtree"
+# path = "benches/kdtree.rs"
+# harness = false
+
+[[bench]]
+name = "kdtrees"
+path = "benches/kdtrees.rs"
+harness = false
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]

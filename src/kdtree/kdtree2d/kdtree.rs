@@ -8,7 +8,6 @@ use crate::{
 
 pub type KDTreeAccess2D<TComp> = KDTreeAccess<TComp, EntityPoint2D>;
 
-// implement `KdPoint` for your item type.
 impl KdPoint for EntityPoint2D {
     type Scalar = f32;
     type Dim = typenum::U2; // 2 dimensional tree.

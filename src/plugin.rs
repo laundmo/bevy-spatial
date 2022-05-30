@@ -9,9 +9,24 @@ use crate::{
     SpatialAccess,
 };
 
-/// The core plugin struct which stores metadata for updating and recreating the choosen spatial index.
+/// The generic plugin struct which stores metadata for updating and recreating the choosen spatial index.
+///
+/// This bevy plugin is what keeps track of and updates the spatial index.
+/// To use this directly, pass in the [SpatialAccess]
+///
+/// ```rust
+/// #[derive(Component)]
+/// struct NearestNeighbourComponent;
+/// 
+/// fn main() {
+///    App::new().add_plugin(
+///             SpatialPlugin::<NearestNeighbourComponent, KDTreeAccess<TComp, EntityPoint2D>> { ..default() },
+///         )
+/// ```
 pub struct SpatialPlugin<TComp, Access> {
+    #[doc(hidden)]
     pub component_type: PhantomData<TComp>,
+    #[doc(hidden)]
     pub spatial_access: PhantomData<Access>,
     /// The minimum distance a entity has to move before its updated in the index. Increase this if small movements do not matter.
     pub min_moved: f32,
@@ -22,6 +37,7 @@ pub struct SpatialPlugin<TComp, Access> {
 }
 
 // apparently generic structs with PhantomData have issues with derive(Clone, Copy)
+// hence they are implemented manually here.
 // see https://stackoverflow.com/a/60907370
 impl<TComp, Access> Copy for SpatialPlugin<TComp, Access> {}
 

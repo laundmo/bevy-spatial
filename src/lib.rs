@@ -2,6 +2,7 @@
 //!
 //! Quickstart using the `kdtree` feature:
 //! ```rust
+//! # use bevy::prelude::*;
 //! use bevy_spatial::{KDTreeAccess2D, KDTreePlugin2D, SpatialAccess};
 //!
 //! #[derive(Component)]
@@ -17,7 +18,7 @@
 //! type NNTree = KDTreeAccess2D<TrackedByKDTree>; // type alias for later
 //!
 //! fn use_neighbour(tree: Res<NNTree>){
-//!     if let Some((pos, entity)) = tree.nearest_neighbour(Vec2::ZERO) {
+//!     if let Some((pos, entity)) = tree.nearest_neighbour(Vec3::ZERO) {
 //!         // pos: Vec3
 //!         // do something with the nearest entity here
 //!     }
@@ -25,6 +26,9 @@
 //! ```
 //!
 //! For more details see [Examples](https://github.com/laundmo/bevy-spatial/tree/main/examples)
+
+#![warn(missing_docs)]
+#![warn(rustdoc::missing_doc_code_examples)]
 
 mod common;
 #[cfg(feature = "kdtree")]

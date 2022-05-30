@@ -3,6 +3,10 @@ use rstar::{PointDistance, RTree, RTreeObject, RTreeParams, AABB};
 
 use crate::{common::EntityPoint2D, rtree::common::RTreeAccess, spatial_access::SpatialAccess};
 
+/// Type alias for R*-Tree with 2D points.
+///
+/// Use this for accessing the R*-Tree created by 
+// TODO: 
 pub type RTreeAccess2D<TComp, Params> = RTreeAccess<TComp, EntityPoint2D, Params>;
 
 impl<TComp, Params> SpatialAccess for RTreeAccess2D<TComp, Params>
@@ -73,6 +77,7 @@ impl RTreeObject for EntityPoint2D {
     }
 }
 
+#[doc(hidden)]
 impl PointDistance for EntityPoint2D {
     fn distance_2(&self, point: &[f32; 2]) -> f32 {
         self.vec.distance_squared(Vec2::from_slice(point))

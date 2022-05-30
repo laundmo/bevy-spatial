@@ -2,8 +2,9 @@ use std::marker::PhantomData;
 
 use rstar::{RTree, RTreeObject, RTreeParams};
 
-use crate::{common::EntityPoint, plugin::SpatialPlugin};
+use crate::plugin::SpatialPlugin;
 
+/// The Resource which stores the spatial datastructure.
 pub struct RTreeAccess<TComp, RObj, Params>
 where
     RObj: RTreeObject,
@@ -30,14 +31,5 @@ where
             recreate_after: plugin.recreate_after,
             component_type: PhantomData,
         }
-    }
-}
-
-impl<Unit> PartialEq for EntityPoint<Unit>
-where
-    Unit: PartialEq,
-{
-    fn eq(&self, other: &Self) -> bool {
-        self.entity == other.entity
     }
 }

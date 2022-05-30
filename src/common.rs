@@ -26,6 +26,15 @@ where
     pub entity: Entity,
 }
 
+impl<Unit> PartialEq for EntityPoint<Unit>
+where
+    Unit: PartialEq,
+{
+    fn eq(&self, other: &Self) -> bool {
+        self.entity == other.entity
+    }
+}
+
 pub type EntityPoint2D = EntityPoint<Vec2>;
 
 pub type EntityPoint3D = EntityPoint<Vec3>;
