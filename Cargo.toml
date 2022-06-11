@@ -32,7 +32,7 @@ kiddo = "0.2.4"
 kd-tree = "0.4.1"
 kdtree = "0.6.0"
 rand = "0.8.5"
-
+quadtree_rs = "0.1.2"
 
 [profile.dev]
 opt-level = 1
@@ -53,6 +53,12 @@ opt-level = 3
 [[bench]]
 name = "kdtrees"
 path = "benches/kdtrees.rs"
+harness = false
+
+
+[[bench]]
+name = "quadtree"
+path = "benches/quadtree.rs"
 harness = false
 
 [package.metadata.docs.rs]
