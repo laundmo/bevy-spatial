@@ -12,16 +12,17 @@ use crate::{
 /// The generic plugin struct which stores metadata for updating and recreating the choosen spatial index.
 ///
 /// This bevy plugin is what keeps track of and updates the spatial index.
-/// To use this directly, pass in the [SpatialAccess]
+/// To use this directly, pass in a type that implements [`SpatialAccess`]
 ///
 /// ```rust
 /// #[derive(Component)]
 /// struct NearestNeighbourComponent;
-/// 
+///
 /// fn main() {
 ///    App::new().add_plugin(
 ///             SpatialPlugin::<NearestNeighbourComponent, KDTreeAccess<TComp, EntityPoint2D>> { ..default() },
 ///         )
+/// }
 /// ```
 pub struct SpatialPlugin<TComp, Access> {
     #[doc(hidden)]
