@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
+use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 
 fn rand_2d() -> ([f32; 2], f32) {
     rand::random()
@@ -24,9 +24,9 @@ pub fn add_2d_kiddo(c: &mut Criterion) {
             let mut kdtree = kiddo::KdTree::with_per_node_capacity(16).unwrap();
 
             b.iter(|| {
-                points
-                    .iter()
-                    .for_each(|point| black_box(kdtree.add(black_box(&point.0), point.1)).unwrap())
+                points.iter().for_each(|point| {
+                    kdtree.add(&point.0, point.1);
+                })
             });
         });
     }
@@ -46,9 +46,9 @@ pub fn add_3d_kiddo(c: &mut Criterion) {
             let mut kdtree = kiddo::KdTree::with_per_node_capacity(16).unwrap();
 
             b.iter(|| {
-                points
-                    .iter()
-                    .for_each(|point| black_box(kdtree.add(black_box(&point.0), point.1)).unwrap())
+                points.iter().for_each(|point| {
+                    kdtree.add(&point.0, point.1);
+                })
             });
         });
     }
@@ -68,9 +68,9 @@ pub fn add_2d_kdtree(c: &mut Criterion) {
             let mut kdtree = kdtree::KdTree::with_capacity(2, size as usize);
 
             b.iter(|| {
-                points
-                    .iter()
-                    .for_each(|point| black_box(kdtree.add(black_box(&point.0), point.1)).unwrap())
+                points.iter().for_each(|point| {
+                    kdtree.add(&point.0, point.1);
+                })
             });
         });
     }
@@ -90,9 +90,9 @@ pub fn add_3d_kdtree(c: &mut Criterion) {
             let mut kdtree = kdtree::KdTree::with_capacity(3, size as usize);
 
             b.iter(|| {
-                points
-                    .iter()
-                    .for_each(|point| black_box(kdtree.add(black_box(&point.0), point.1)).unwrap())
+                points.iter().for_each(|point| {
+                    kdtree.add(&point.0, point.1);
+                })
             });
         });
     }
