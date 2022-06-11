@@ -18,11 +18,9 @@ use crate::{
 /// #[derive(Component)]
 /// struct NearestNeighbourComponent;
 ///
-/// fn main() {
-///    App::new().add_plugin(
-///             SpatialPlugin::<NearestNeighbourComponent, KDTreeAccess<TComp, EntityPoint2D>> { ..default() },
-///         )
-/// }
+/// App::new().add_plugin(
+///     SpatialPlugin::<NearestNeighbourComponent, KDTreeAccess<TComp, EntityPoint2D>> { ..default() },
+/// )
 /// ```
 pub struct SpatialPlugin<TComp, Access> {
     #[doc(hidden)]

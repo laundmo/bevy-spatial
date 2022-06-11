@@ -18,11 +18,7 @@ where
     // needs impl due to underlying datastructure access
     fn nearest_neighbour(&self, loc: Vec3) -> Option<(Vec3, Entity)> {
         let res = self.tree.nearest_neighbor(&[loc.x, loc.y, loc.z]);
-        if let Some(point) = res {
-            return Some((point.vec, point.entity));
-        } else {
-            return None;
-        }
+        res.map(|point| (point.vec, point.entity))
     }
     fn k_nearest_neighbour(&self, loc: Vec3, k: usize) -> Vec<(Vec3, Entity)> {
         return self

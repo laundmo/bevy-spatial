@@ -76,12 +76,12 @@ fn mouse(
 ) {
     let win = windows.get_primary().unwrap();
     if let Some(mut pos) = win.cursor_position() {
-        pos.x = pos.x - win.width() / 2.0;
-        pos.y = pos.y - win.height() / 2.0;
+        pos.x -= win.width() / 2.0;
+        pos.y -= win.height() / 2.0;
         let mut transform = query.single_mut();
         if let Some((pos, entity)) = treeaccess.nearest_neighbour(pos.extend(0.0)) {
             commands.entity(entity).despawn();
-            //transform.translation = pos.truncate().extend(1.0);
+            transform.translation = pos.truncate().extend(1.0);
         }
     }
 }
@@ -93,8 +93,8 @@ fn color(
 ) {
     let win = windows.get_primary().unwrap();
     if let Some(mut pos) = win.cursor_position() {
-        pos.x = pos.x - win.width() / 2.0;
-        pos.y = pos.y - win.height() / 2.0;
+        pos.x -= win.width() / 2.0;
+        pos.y -= win.height() / 2.0;
 
         for (_, entity) in treeaccess.within_distance(pos.extend(0.0), 50.0) {
             let mut sprite = query.get_mut(entity).unwrap();

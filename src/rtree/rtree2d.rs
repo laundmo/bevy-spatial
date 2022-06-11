@@ -5,8 +5,8 @@ use crate::{common::EntityPoint2D, rtree::common::RTreeAccess, spatial_access::S
 
 /// Type alias for R*-Tree with 2D points.
 ///
-/// Use this for accessing the R*-Tree created by 
-// TODO: 
+/// Use this for accessing the R*-Tree created by
+// TODO:
 pub type RTreeAccess2D<TComp, Params> = RTreeAccess<TComp, EntityPoint2D, Params>;
 
 impl<TComp, Params> SpatialAccess for RTreeAccess2D<TComp, Params>
@@ -23,11 +23,7 @@ where
     // needs impl due to underlying datastructure access
     fn nearest_neighbour(&self, loc: Vec3) -> Option<(Vec3, Entity)> {
         let res = self.tree.nearest_neighbor(&[loc.x, loc.y]);
-        if let Some(point) = res {
-            return Some((point.vec.extend(0.0), point.entity));
-        } else {
-            return None;
-        }
+        res.map(|point| (point.vec.extend(0.0), point.entity))
     }
     fn k_nearest_neighbour(&self, loc: Vec3, k: usize) -> Vec<(Vec3, Entity)> {
         return self
