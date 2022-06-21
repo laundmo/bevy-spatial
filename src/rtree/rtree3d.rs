@@ -18,21 +18,21 @@ where
     // needs impl due to underlying datastructure access
     fn nearest_neighbour(&self, loc: Vec3) -> Option<(Vec3, Entity)> {
         let res = self.tree.nearest_neighbor(&[loc.x, loc.y, loc.z]);
-        res.map(|point| (point.vec, point.entity))
+        res.map(|point| (point.pos, point.entity))
     }
     fn k_nearest_neighbour(&self, loc: Vec3, k: usize) -> Vec<(Vec3, Entity)> {
         return self
             .tree
             .nearest_neighbor_iter(&[loc.x, loc.y, loc.z])
             .take(k)
-            .map(|e| (e.vec, e.entity))
+            .map(|e| (e.pos, e.entity))
             .collect::<Vec<(Vec3, Entity)>>();
     }
     fn within_distance(&self, loc: Vec3, distance: f32) -> Vec<(Vec3, Entity)> {
         return self
             .tree
             .locate_within_distance([loc.x, loc.y, loc.z], distance.powi(2))
-            .map(|e| (e.vec, e.entity))
+            .map(|e| (e.pos, e.entity))
             .collect::<Vec<(Vec3, Entity)>>();
     }
     fn recreate(&mut self, all: Vec<(Vec3, Entity)>) {
@@ -64,12 +64,12 @@ impl RTreeObject for EntityPoint3D {
     type Envelope = AABB<[f32; 3]>;
 
     fn envelope(&self) -> Self::Envelope {
-        AABB::from_point(self.vec.into())
+        AABB::from_point(self.pos.into())
     }
 }
 
 impl PointDistance for EntityPoint3D {
     fn distance_2(&self, point: &[f32; 3]) -> f32 {
-        self.vec.distance_squared(Vec3::from_slice(point))
+        self.pos.distance_squared(Vec3::from_slice(point))
     }
 }

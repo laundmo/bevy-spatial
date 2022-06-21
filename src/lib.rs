@@ -30,6 +30,7 @@
 #![warn(missing_docs)]
 #![warn(rustdoc::missing_doc_code_examples)]
 
+mod aabb_impls;
 mod common;
 #[cfg(feature = "kdtree")]
 mod kdtree;
@@ -39,11 +40,7 @@ mod resources_components;
 mod rtree;
 mod spatial_access;
 
-pub use self::{
-    common::{EntityPoint, EntityPoint2D, EntityPoint3D},
-    plugin::SpatialPlugin,
-    spatial_access::SpatialAccess,
-};
+pub use self::{common::AABB, plugin::SpatialPlugin, spatial_access::SpatialAccess};
 
 #[cfg(feature = "kdtree")]
 pub use self::kdtree::{KDTreeAccess2D, KDTreePlugin2D};

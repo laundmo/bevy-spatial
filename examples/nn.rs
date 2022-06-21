@@ -75,7 +75,7 @@ fn move_to(
     for mut transform in query.iter_mut() {
         let pos = transform.translation.truncate();
         if let Some(nearest) = treeaccess.tree.nearest_neighbor(&pos.to_array()) {
-            let towards = nearest.vec - pos;
+            let towards = nearest.pos - pos;
             transform.translation +=
                 (towards.normalize() * time.delta_seconds() * 64.0).extend(0.0);
         }

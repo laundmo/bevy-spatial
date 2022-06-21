@@ -1,4 +1,7 @@
+use std::fmt::Debug;
+
 use bevy::{ecs::schedule::ShouldRun, prelude::*};
+use num_traits::{Bounded, Num, Signed};
 
 use crate::resources_components::TimestepElapsed;
 
@@ -17,126 +20,36 @@ where
     }
 }
 
-#[derive(Copy, Clone, Debug)]
-pub struct EntityPoint<Unit>
-where
-    Unit: PartialEq,
-{
-    pub vec: Unit,
-    pub entity: Entity,
-}
+/// Empty trait for numbers. A copy of R*-tree Scalar.
+pub trait Scalar: Bounded + Num + Clone + Copy + Signed + PartialOrd + Debug {}
 
-impl<Unit> PartialEq for EntityPoint<Unit>
-where
-    Unit: PartialEq,
-{
-    fn eq(&self, other: &Self) -> bool {
-        self.entity == other.entity
-    }
-}
+impl<S> Scalar for S where S: Bounded + Num + Clone + Copy + Signed + PartialOrd + Debug {}
 
-pub type EntityPoint2D = EntityPoint<Vec2>;
+/// Empty trait for the Unit generic - as that could either be Vec2 or Vec3.
+pub trait Vec: Clone + PartialEq + Debug + Default {}
 
-pub type EntityPoint3D = EntityPoint<Vec3>;
+/// Blanket Vec impl for everything that matches the where clause.
+impl<T> Vec for T where T: Clone + PartialEq + Debug + Default {}
 
-impl<Unit> From<(Unit, Entity)> for EntityPoint<Unit>
-where
-    Unit: PartialEq,
-{
-    fn from(thing: (Unit, Entity)) -> Self {
-        EntityPoint {
-            vec: thing.0,
-            entity: thing.1,
-        }
-    }
-}
+pub trait AABB {
+    /// Type of the glam Vec used in this AABB
+    type VecType: Vec;
+    /// Type of the scalars used for distances etc. Should match the VecType's numerical type.
+    type ScalarType: Scalar;
 
-impl<Unit> From<&(Unit, Entity)> for EntityPoint<Unit>
-where
-    Unit: PartialEq + Copy,
-{
-    fn from(thing: &(Unit, Entity)) -> Self {
-        EntityPoint {
-            vec: thing.0,
-            entity: thing.1,
-        }
-    }
-}
-
-impl<Unit> From<Entity> for EntityPoint<Unit>
-where
-    Unit: PartialEq + Default,
-{
-    fn from(entity: Entity) -> Self {
-        EntityPoint {
-            vec: Unit::default(),
-            entity,
-        }
-    }
-}
-
-// truncating Vec3 to EntityPoint2D
-
-// reference
-impl From<&(Vec3, Entity)> for EntityPoint2D {
-    fn from(thing: &(Vec3, Entity)) -> Self {
-        EntityPoint2D {
-            vec: thing.0.truncate(),
-            entity: thing.1,
-        }
-    }
-}
-
-impl From<&(Entity, Vec3)> for EntityPoint2D {
-    fn from(thing: &(Entity, Vec3)) -> Self {
-        EntityPoint2D {
-            vec: thing.1.truncate(),
-            entity: thing.0,
-        }
-    }
-}
-
-// value
-impl From<(Vec3, Entity)> for EntityPoint2D {
-    fn from(thing: (Vec3, Entity)) -> Self {
-        EntityPoint2D {
-            vec: thing.0.truncate(),
-            entity: thing.1,
-        }
-    }
-}
-
-impl From<(Entity, Vec3)> for EntityPoint2D {
-    fn from(thing: (Entity, Vec3)) -> Self {
-        EntityPoint2D {
-            vec: thing.1.truncate(),
-            entity: thing.0,
-        }
-    }
-}
-
-// the compiler wont allow these to be generic??
-
-impl From<(&Transform, Entity)> for EntityPoint2D {
-    fn from(thing: (&Transform, Entity)) -> Self {
-        Self::from((thing.0.translation, thing.1))
-    }
-}
-
-impl From<(Entity, &Transform)> for EntityPoint2D {
-    fn from(thing: (Entity, &Transform)) -> Self {
-        Self::from((thing.1.translation, thing.0))
-    }
-}
-
-impl From<(&Transform, Entity)> for EntityPoint3D {
-    fn from(thing: (&Transform, Entity)) -> Self {
-        Self::from((thing.0.translation, thing.1))
-    }
-}
-
-impl From<(Entity, &Transform)> for EntityPoint3D {
-    fn from(thing: (Entity, &Transform)) -> Self {
-        Self::from((thing.1.translation, thing.0))
-    }
+    /// Center point of the AABB
+    fn point(&self) -> Self::VecType;
+    /// Squared distance to another AABB (based on `AABB.point()`)
+    //TODO: how to ref?
+    fn distance_squared(&self, other: &Self) -> Self::ScalarType;
+    /// Upper left corner of the AABB
+    fn upper(&self) -> Self::VecType;
+    /// Lower right corner of the AABB
+    fn lower(&self) -> Self::VecType;
+    /// Whether the AABB fully contains another AABB
+    fn contains(&self, other: &Self) -> bool;
+    /// Whether the AABB Overlaps with another AABB
+    fn overlaps(&self, other: &Self) -> bool;
+    /// The overlap area size between this and another AABB
+    fn overlap_area(&self, other: &Self) -> Self::ScalarType;
 }

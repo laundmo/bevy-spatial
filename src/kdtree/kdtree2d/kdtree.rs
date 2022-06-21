@@ -12,7 +12,7 @@ impl KdPoint for EntityPoint2D {
     type Scalar = f32;
     type Dim = typenum::U2; // 2 dimensional tree.
     fn at(&self, k: usize) -> f32 {
-        self.vec[k]
+        self.pos[k]
     }
 }
 
@@ -54,14 +54,14 @@ where
     // needs impl due to underlying datastructure access
     fn nearest_neighbour(&self, loc: Vec3) -> Option<(Vec3, Entity)> {
         let res = self.tree.nearest(&[loc.x, loc.y]);
-        res.map(|point| (point.item.vec.extend(0.0), point.item.entity))
+        res.map(|point| (point.item.pos.extend(0.0), point.item.entity))
     }
     fn k_nearest_neighbour(&self, loc: Vec3, k: usize) -> Vec<(Vec3, Entity)> {
         return self
             .tree
             .nearests(&[loc.x, loc.y], k)
             .iter()
-            .map(|e| (e.item.vec.extend(0.0), e.item.entity))
+            .map(|e| (e.item.pos.extend(0.0), e.item.entity))
             .collect::<Vec<(Vec3, Entity)>>();
     }
     fn within_distance(&self, loc: Vec3, distance: f32) -> Vec<(Vec3, Entity)> {
@@ -72,7 +72,7 @@ where
             .tree
             .within_radius(&[loc.x, loc.y], distance)
             .iter()
-            .map(|e| (e.vec.extend(0.0), e.entity))
+            .map(|e| (e.pos.extend(0.0), e.entity))
             .collect::<Vec<(Vec3, Entity)>>();
     }
 
