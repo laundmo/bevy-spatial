@@ -40,7 +40,12 @@ mod resources_components;
 mod rtree;
 mod spatial_access;
 
-pub use self::{common::AABB, plugin::SpatialPlugin, spatial_access::SpatialAccess};
+pub use self::{
+    aabb_impls::{Cube, Point2d, Point3d, Rect},
+    common::AABB,
+    plugin::SpatialPlugin,
+    spatial_access::SpatialAccess,
+};
 
 #[cfg(feature = "kdtree")]
 pub use self::kdtree::{KDTreeAccess2D, KDTreePlugin2D};

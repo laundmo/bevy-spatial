@@ -16,7 +16,7 @@ where
     pub entity: Entity,
 }
 
-type Point2d = Point<Vec2>;
+pub type Point2d = Point<Vec2>;
 impl Point2d {
     pub fn new(tr: &Transform, entity: &Entity) -> Self {
         Self {
@@ -25,7 +25,7 @@ impl Point2d {
         }
     }
 }
-type Point3d = Point<Vec3>;
+pub type Point3d = Point<Vec3>;
 impl Point3d {
     pub fn new(tr: &Transform, entity: &Entity) -> Self {
         Self {
@@ -47,7 +47,7 @@ impl AABB for Point<Vec2> {
     }
 
     // always false since this aabb is a point
-    fn contains(&self, other: &Self) -> bool {
+    fn contains(&self, _other: &Self) -> bool {
         false
     }
 
@@ -59,11 +59,11 @@ impl AABB for Point<Vec2> {
         self.point()
     }
 
-    fn overlap_area(&self, other: &Self) -> Self::ScalarType {
+    fn overlap_area(&self, _other: &Self) -> Self::ScalarType {
         0.0
     }
 
-    fn overlaps(&self, other: &Self) -> bool {
+    fn overlaps(&self, _other: &Self) -> bool {
         false
     }
 }
@@ -81,7 +81,7 @@ impl AABB for Point<Vec3> {
     }
 
     // always false since this aabb is a point
-    fn contains(&self, other: &Self) -> bool {
+    fn contains(&self, _other: &Self) -> bool {
         false
     }
 
@@ -93,17 +93,17 @@ impl AABB for Point<Vec3> {
         self.point()
     }
 
-    fn overlap_area(&self, other: &Self) -> Self::ScalarType {
+    fn overlap_area(&self, _other: &Self) -> Self::ScalarType {
         0.0
     }
 
-    fn overlaps(&self, other: &Self) -> bool {
+    fn overlaps(&self, _other: &Self) -> bool {
         false
     }
 }
 
 #[derive(Copy, Clone, Debug)]
-pub struct Rect<Unit>
+pub struct RectBase<Unit>
 where
     Unit: Vec,
 {
@@ -115,29 +115,29 @@ where
     pub entity: Entity,
 }
 
-type Rect2d = Rect<Vec2>;
-impl Rect2d {
-    pub fn new(tr: &Transform, entity: &Entity) -> Self {
+pub type Rect = RectBase<Vec2>;
+impl Rect {
+    pub fn new(tr: &Transform, entity: Entity) -> Self {
         Self {
             pos: tr.translation.xy(),
             extent: tr.scale.xy(),
-            entity: *entity,
+            entity,
         }
     }
 }
 
-type Rect3d = Rect<Vec3>;
-impl Rect3d {
-    pub fn new(tr: &Transform, entity: &Entity) -> Self {
+pub type Cube = RectBase<Vec3>;
+impl Cube {
+    pub fn new(tr: &Transform, entity: Entity) -> Self {
         Self {
             pos: tr.translation.xyz(),
             extent: tr.scale.xyz(),
-            entity: *entity,
+            entity,
         }
     }
 }
 
-impl AABB for Rect<Vec2> {
+impl AABB for Rect {
     type VecType = Vec2;
     type ScalarType = f32;
 
@@ -180,7 +180,7 @@ impl AABB for Rect<Vec2> {
     }
 }
 
-impl AABB for Rect<Vec3> {
+impl AABB for Cube {
     type VecType = Vec3;
     type ScalarType = f32;
 
