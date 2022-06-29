@@ -115,8 +115,8 @@ where
     pub entity: Entity,
 }
 
-pub type Rect = RectBase<Vec2>;
-impl Rect {
+pub type RectAABB = RectBase<Vec2>;
+impl RectAABB {
     pub fn new(tr: &Transform, entity: Entity) -> Self {
         Self {
             pos: tr.translation.xy(),
@@ -137,7 +137,7 @@ impl Cube {
     }
 }
 
-impl AABB for Rect {
+impl AABB for RectAABB {
     type VecType = Vec2;
     type ScalarType = f32;
 
@@ -177,6 +177,12 @@ impl AABB for Rect {
         let xd = umin.x - lmax.x;
         let yd = umin.y - lmax.y;
         return xd * yd;
+    }
+}
+
+impl From<(Entity, &Transform)> for RectAABB {
+    fn from(other: (Entity, &Transform)) -> Self {
+        RectAABB::new(other.1, other.0)
     }
 }
 

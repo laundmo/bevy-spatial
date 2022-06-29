@@ -32,23 +32,31 @@
 
 mod aabb_impls;
 mod common;
-#[cfg(feature = "kdtree")]
-mod kdtree;
 mod plugin;
 mod resources_components;
-#[cfg(feature = "rstar")]
-mod rtree;
 mod spatial_access;
 
 pub use self::{
-    aabb_impls::{Cube, Point2d, Point3d, Rect},
+    aabb_impls::{Cube, Point2d, Point3d, RectAABB},
     common::AABB,
     plugin::SpatialPlugin,
     spatial_access::SpatialAccess,
 };
 
+#[cfg(feature = "debug")]
+mod debug_aabb;
+#[cfg(feature = "debug")]
+mod debug_draw_utils;
+#[cfg(feature = "debug")]
+pub use self::debug_aabb::DebugAABB;
+
+#[cfg(feature = "kdtree")]
+mod kdtree;
 #[cfg(feature = "kdtree")]
 pub use self::kdtree::{KDTreeAccess2D, KDTreePlugin2D};
+
+#[cfg(feature = "rstar")]
+mod rtree;
 
 #[cfg(feature = "rstar")]
 pub use self::rtree::{

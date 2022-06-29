@@ -558,6 +558,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "bevy_prototype_debug_lines"
+version = "0.7.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6323841e9f70d7e124c60a3e7a985d9afd03074992968adbd5fc45badec8f6db"
+dependencies = [
+ "bevy",
+]
+
+[[package]]
 name = "bevy_reflect"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -647,6 +656,7 @@ name = "bevy_spatial"
 version = "0.1.1"
 dependencies = [
  "bevy",
+ "bevy_prototype_debug_lines",
  "criterion",
  "kd-tree",
  "kdtree",

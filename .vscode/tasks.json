@@ -1,0 +1,26 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Run example",
+      "detail": "Runs the currently selected example",
+      "type": "shell",
+      "command": "cargo run --features debug --example aabb_visualize",
+      "options": {
+        "env": {
+          "RUST_LOG": "warn,{{crate_name}}=trace"
+        }
+      },
+      "problemMatcher": ["$rustc"],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": true,
+        "focus": true
+      }
+    }
+  ]
+}

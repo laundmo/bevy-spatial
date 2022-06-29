@@ -1,9 +1,10 @@
 use bevy::prelude::*;
-use bevy_spatial::{Rect, AABB};
+use bevy_spatial::{DebugAABB, RectAABB, AABB};
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
+        .add_plugin(DebugAABB::<Cursor>::default())
         .add_startup_system(setup)
         .add_system(mouse)
         .run();
@@ -20,20 +21,20 @@ fn setup(mut commands: Commands) {
     commands.spawn().insert(Center).insert_bundle(SpriteBundle {
         sprite: Sprite {
             color: Color::ORANGE_RED,
-            custom_size: Some(Vec2::new(3.0, 3.0)),
+            custom_size: Some(Vec2::splat(0.5)),
             ..default()
         },
-        transform: Transform::from_translation(Vec3::ZERO).with_scale(Vec3::splat(5.0)),
+        transform: Transform::from_translation(Vec3::ZERO).with_scale(Vec3::splat(50.0)),
         ..default()
     });
 
     commands.spawn().insert(Cursor).insert_bundle(SpriteBundle {
         sprite: Sprite {
             color: Color::BLUE,
-            custom_size: Some(Vec2::new(3.0, 3.0)),
+            custom_size: Some(Vec2::splat(0.5)),
             ..default()
         },
-        transform: Transform::from_translation(Vec3::ZERO).with_scale(Vec3::splat(5.0)),
+        transform: Transform::from_translation(Vec3::ZERO).with_scale(Vec3::splat(50.0)),
         ..default()
     });
 }
@@ -47,15 +48,4 @@ fn mouse(windows: Res<Windows>, mut query: Query<&mut Transform, With<Cursor>>) 
             transform.translation = pos.extend(0.0);
         }
     }
-}
-
-fn aabb_draw(mut query: Query<(&mut Transform, Entity)>) {
-    let aabbs: Vec<Rect> = vec![];
-    for (mut tra, ent) in query.iter_mut() {
-        let aabb = Rect::new(&tra, ent);
-        aabbs.append(aabb);
-    }
-
-    // TODO: draw aabb, maybe only in debug mode?
-    // TODO: draw intersections
 }
