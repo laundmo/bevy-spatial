@@ -27,7 +27,7 @@ kdtree = ["dep:kd-tree", "dep:typenum"]
 
 
 [dev-dependencies]
-bevy = { version = "0.7.0" }
+bevy = { version = "0.7.0", features = ["dynamic"] }
 criterion = { version = "0.3", features = ["html_reports"] }
 kiddo = "0.2.4"
 kd-tree = "0.4.1"
