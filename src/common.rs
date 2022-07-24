@@ -39,17 +39,23 @@ pub trait AABB {
 
     /// Center point of the AABB
     fn point(&self) -> Self::VecType;
+    /// Area of the AABB
+    fn area(&self) -> Self::ScalarType;
     /// Squared distance to another AABB (based on `AABB.point()`)
     //TODO: how to ref?
     fn distance_squared(&self, other: &Self) -> Self::ScalarType;
     /// Upper left corner of the AABB
-    fn upper(&self) -> Self::VecType;
+    fn top_left(&self) -> Self::VecType;
+    /// Upper right corner of the AABB
+    fn top_right(&self) -> Self::VecType;
+    /// Lower left corner of the AABB
+    fn bottom_left(&self) -> Self::VecType;
     /// Lower right corner of the AABB
-    fn lower(&self) -> Self::VecType;
+    fn bottom_right(&self) -> Self::VecType;
     /// Whether the AABB fully contains another AABB
     fn contains(&self, other: &Self) -> bool;
     /// Whether the AABB Overlaps with another AABB
     fn overlaps(&self, other: &Self) -> bool;
-    /// The overlap area size between this and another AABB
-    fn overlap_area(&self, other: &Self) -> Self::ScalarType;
+    /// The AABB created by the overlap.
+    fn overlap(&self, other: &Self) -> Self;
 }

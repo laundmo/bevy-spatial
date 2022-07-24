@@ -41,16 +41,6 @@ opt-level = 1
 [profile.dev.package."*"]
 opt-level = 3
 
-# [[bench]]
-# name = "kd-tree"
-# path = "benches/kd-tree.rs"
-# harness = false
-
-# [[bench]]
-# name = "kdtree"
-# path = "benches/kdtree.rs"
-# harness = false
-
 [[bench]]
 name = "kdtrees"
 path = "benches/kdtrees.rs"
