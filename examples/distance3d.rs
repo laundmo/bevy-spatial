@@ -1,6 +1,5 @@
 use bevy::{
     diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
-    math::Vec3Swizzles,
     prelude::*,
 };
 use bevy_spatial::{EfficientInsertParams, RTreeAccess3D, RTreePlugin3D, SpatialAccess};
@@ -50,7 +49,7 @@ fn setup(
         color: Color::WHITE,
         brightness: 0.5,
     });
-    commands.spawn_bundle(PerspectiveCameraBundle {
+    commands.spawn_bundle(Camera3dBundle {
         transform: Transform::from_xyz(0.0, 100.0, 900.0).looking_at(Vec3::ZERO, Vec3::Y),
         ..default()
     });
@@ -83,19 +82,13 @@ fn setup(
     }
 }
 
-fn mouse(
-    windows: Res<Windows>,
-    treeaccess: Res<NNTree>,
-    mut query: Query<&mut Transform, With<Cursor>>,
-) {
+fn mouse(windows: Res<Windows>, mut query: Query<&mut Transform, With<Cursor>>) {
     let win = windows.get_primary().unwrap();
     if let Some(mut pos) = win.cursor_position() {
         pos.x = pos.x - win.width() / 2.0;
         pos.y = pos.y - win.height() / 2.0;
         let mut transform = query.single_mut();
         transform.translation = pos.extend(0.0);
-        //if let Some(nearest) = treeaccess.nearest_neighbour(pos.extend(0.0)) {
-        //}
     }
 }
 
@@ -121,7 +114,7 @@ fn reset_color(
     colors: Res<MaterialHandles>,
     mut query: Query<&mut Handle<StandardMaterial>, With<NearestNeighbourComponent>>,
 ) {
-    for mut handle in query.iter_mut() {
+    for mut handle in &mut query {
         *handle = colors.orange_red.clone();
     }
 }
