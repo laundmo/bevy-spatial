@@ -37,16 +37,14 @@ mod resources_components;
 mod spatial_access;
 
 pub use self::{
-    aabb_impls::{Cube, Point2d, Point3d, RectAABB},
-    common::AABB,
+    aabb_impls::{CubeAABB, Point2d, Point3d, RectAABB},
+    common::{AABBextras2d, AABBextras3d, AABB},
     plugin::SpatialPlugin,
     spatial_access::SpatialAccess,
 };
 
 #[cfg(feature = "debug")]
 mod debug_aabb;
-#[cfg(feature = "debug")]
-mod debug_draw_utils;
 #[cfg(feature = "debug")]
 pub use self::debug_aabb::DebugAABB;
 

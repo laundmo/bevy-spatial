@@ -4,7 +4,7 @@ use bevy_spatial::{DebugAABB, RectAABB, AABB};
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-        .add_plugin(DebugAABB::<Cursor>::default())
+        .add_plugin(DebugAABB::<Debug>::default())
         .add_startup_system(setup)
         .add_system(mouse)
         .run();
@@ -16,27 +16,50 @@ struct Center;
 #[derive(Component)]
 struct Cursor;
 
+#[derive(Component)]
+struct Debug;
+
 fn setup(mut commands: Commands) {
     commands.spawn_bundle(OrthographicCameraBundle::new_2d());
-    commands.spawn().insert(Center).insert_bundle(SpriteBundle {
-        sprite: Sprite {
-            color: Color::ORANGE_RED,
-            custom_size: Some(Vec2::splat(0.5)),
+    commands
+        .spawn()
+        .insert(Center)
+        .insert(Debug)
+        .insert_bundle(SpriteBundle {
+            sprite: Sprite {
+                color: Color::PURPLE,
+                custom_size: Some(Vec2::splat(0.5)),
+                ..default()
+            },
+            transform: Transform::from_translation(Vec3::ZERO).with_scale(Vec3::splat(50.0)),
             ..default()
-        },
-        transform: Transform::from_translation(Vec3::ZERO).with_scale(Vec3::splat(50.0)),
-        ..default()
-    });
-
-    commands.spawn().insert(Cursor).insert_bundle(SpriteBundle {
-        sprite: Sprite {
-            color: Color::BLUE,
-            custom_size: Some(Vec2::splat(0.5)),
+        });
+    commands
+        .spawn()
+        .insert(Center)
+        .insert(Debug)
+        .insert_bundle(SpriteBundle {
+            sprite: Sprite {
+                color: Color::PURPLE,
+                custom_size: Some(Vec2::splat(0.5)),
+                ..default()
+            },
+            transform: Transform::from_translation(Vec3::splat(20.0)).with_scale(Vec3::splat(50.0)),
             ..default()
-        },
-        transform: Transform::from_translation(Vec3::ZERO).with_scale(Vec3::splat(50.0)),
-        ..default()
-    });
+        });
+    commands
+        .spawn()
+        .insert(Cursor)
+        .insert(Debug)
+        .insert_bundle(SpriteBundle {
+            sprite: Sprite {
+                color: Color::BLUE,
+                custom_size: Some(Vec2::splat(0.5)),
+                ..default()
+            },
+            transform: Transform::from_translation(Vec3::ZERO).with_scale(Vec3::splat(50.0)),
+            ..default()
+        });
 }
 
 fn mouse(windows: Res<Windows>, mut query: Query<&mut Transform, With<Cursor>>) {
