@@ -33,7 +33,7 @@ fn main() {
 type NNTree = KDTreeAccess2D<NearestNeighbourComponent>;
 
 fn setup(mut commands: Commands) {
-    commands.spawn_bundle(OrthographicCameraBundle::new_2d());
+    commands.spawn_bundle(Camera2dBundle::default());
     commands.spawn().insert(Cursor).insert_bundle(SpriteBundle {
         sprite: Sprite {
             color: Color::rgb(0.0, 0.0, 1.0),
@@ -73,15 +73,20 @@ fn mouse(
     windows: Res<Windows>,
     treeaccess: Res<NNTree>,
     mut query: Query<&mut Transform, With<Cursor>>,
+    ms_buttons: Res<Input<MouseButton>>,
 ) {
+    let use_mouse = ms_buttons.pressed(MouseButton::Left);
     let win = windows.get_primary().unwrap();
     if let Some(mut pos) = win.cursor_position() {
         pos.x = pos.x - win.width() / 2.0;
         pos.y = pos.y - win.height() / 2.0;
         let mut transform = query.single_mut();
-        if let Some((pos, entity)) = treeaccess.nearest_neighbour(pos.extend(0.0)) {
-            commands.entity(entity).despawn();
-            //transform.translation = pos.truncate().extend(1.0);
+        if let Some((_pos, entity)) = treeaccess.nearest_neighbour(pos.extend(0.0)) {
+            if use_mouse {
+                transform.translation = pos.extend(1.0); // I don't really know what this is here for
+            } else {
+                commands.entity(entity).despawn();
+            }
         }
     }
 }
@@ -104,13 +109,13 @@ fn color(
 }
 
 fn reset_color(mut query: Query<&mut Sprite, With<NearestNeighbourComponent>>) {
-    for mut sprite in query.iter_mut() {
+    for mut sprite in &mut query {
         sprite.color = Color::ORANGE_RED;
     }
 }
 
 fn movement(mut query: Query<&mut Transform, With<NearestNeighbourComponent>>) {
-    for mut pos in query.iter_mut() {
+    for mut pos in &mut query {
         let goal = pos.translation - Vec3::ZERO;
         pos.translation += goal.normalize_or_zero();
     }
@@ -125,7 +130,7 @@ fn collide_wall(
     let w = win.width() / 2.0;
     let h = win.height() / 2.0;
 
-    for mut pos in query.iter_mut() {
+    for mut pos in &mut query {
         let [x, y] = pos.translation.xy().to_array();
         if y < -h || x < -w || y > h || x > w {
             pos.translation = pos.translation.normalize_or_zero();
