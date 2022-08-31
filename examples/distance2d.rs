@@ -102,8 +102,9 @@ fn color(
         pos.y -= win.height() / 2.0;
 
         for (_, entity) in treeaccess.within_distance(pos.extend(0.0), 50.0) {
-            let mut sprite = query.get_mut(entity).unwrap();
-            sprite.color = Color::BLACK;
+            if let Ok(mut sprite) = query.get_mut(entity) {
+                sprite.color = Color::BLACK;
+            }
         }
     }
 }

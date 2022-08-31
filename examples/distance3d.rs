@@ -102,8 +102,9 @@ fn color(
         pos.y -= win.height() / 2.0;
 
         for (_, entity) in treeaccess.within_distance(pos.extend(0.0), 100.0) {
-            let mut handle = query.get_mut(entity).unwrap();
-            *handle = colors.black.clone();
+            if let Ok(mut handle) = query.get_mut(entity) {
+                *handle = colors.black.clone();
+            }
         }
     }
 }

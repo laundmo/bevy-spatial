@@ -63,7 +63,7 @@ where
 
         app.insert_resource(tree_access)
             .add_startup_system_to_stage(StartupStage::PostStartup, add_added::<Access>)
-            .add_system_to_stage(CoreStage::Update, delete::<Access>);
+            .add_system_to_stage(CoreStage::PostUpdate, delete::<Access>);
 
         // decide whether to use the timestep
         if let Some(step) = self.timestep {
@@ -72,15 +72,15 @@ where
                 PhantomData,
             ));
             app.add_system_set_to_stage(
-                CoreStage::Update,
+                CoreStage::PostUpdate,
                 SystemSet::new()
                     .with_run_criteria(run_if_elapsed::<TComp>)
                     .with_system(add_added::<Access>)
                     .with_system(update_moved::<Access>),
             );
         } else {
-            app.add_system_to_stage(CoreStage::Update, add_added::<Access>)
-                .add_system_to_stage(CoreStage::Update, update_moved::<Access>);
+            app.add_system_to_stage(CoreStage::PostUpdate, add_added::<Access>)
+                .add_system_to_stage(CoreStage::PostUpdate, update_moved::<Access>);
         }
     }
 }
