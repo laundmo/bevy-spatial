@@ -78,8 +78,8 @@ fn mouse(
     let use_mouse = ms_buttons.pressed(MouseButton::Left);
     let win = windows.get_primary().unwrap();
     if let Some(mut pos) = win.cursor_position() {
-        pos.x = pos.x - win.width() / 2.0;
-        pos.y = pos.y - win.height() / 2.0;
+        pos.x -= win.width() / 2.0;
+        pos.y -= win.height() / 2.0;
         let mut transform = query.single_mut();
         if let Some((_pos, entity)) = treeaccess.nearest_neighbour(pos.extend(0.0)) {
             if use_mouse {
@@ -98,8 +98,8 @@ fn color(
 ) {
     let win = windows.get_primary().unwrap();
     if let Some(mut pos) = win.cursor_position() {
-        pos.x = pos.x - win.width() / 2.0;
-        pos.y = pos.y - win.height() / 2.0;
+        pos.x -= win.width() / 2.0;
+        pos.y -= win.height() / 2.0;
 
         for (_, entity) in treeaccess.within_distance(pos.extend(0.0), 50.0) {
             let mut sprite = query.get_mut(entity).unwrap();

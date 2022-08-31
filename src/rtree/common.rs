@@ -9,9 +9,14 @@ where
     RObj: RTreeObject,
     Params: RTreeParams,
 {
+    /// The underlying RTree struct.
     pub tree: RTree<RObj, Params>,
+    /// The amount of entities which moved per frame after which the tree is fully recreated instead of updated.
     pub recreate_after: usize,
+    /// The distance after which a entity is updated in the tree
     pub min_moved: f32,
+
+    #[doc(hidden)]
     pub component_type: PhantomData<TComp>,
 }
 

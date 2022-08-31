@@ -48,7 +48,7 @@ where
 {
     fn from(thing: &(Unit, Entity)) -> Self {
         EntityPoint {
-            vec: thing.0.clone(),
+            vec: thing.0,
             entity: thing.1,
         }
     }
