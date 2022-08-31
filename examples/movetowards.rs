@@ -20,7 +20,7 @@ fn main() {
 type NNTree = RTreeAccess2D<NearestNeighbour, DefaultParams>;
 
 fn setup(mut commands: Commands) {
-    commands.spawn_bundle(OrthographicCameraBundle::new_2d());
+    commands.spawn_bundle(Camera2dBundle::default());
     for x in -6..6 {
         for y in -6..6 {
             commands
@@ -46,8 +46,8 @@ fn mouseclick(mut commands: Commands, mouse_input: Res<Input<MouseButton>>, wind
     let win = windows.get_primary().unwrap();
     if mouse_input.just_pressed(MouseButton::Left) {
         if let Some(mut pos) = win.cursor_position() {
-            pos.x = pos.x - win.width() / 2.0;
-            pos.y = pos.y - win.height() / 2.0;
+            pos.x -= win.width() / 2.0;
+            pos.y -= win.height() / 2.0;
             commands
                 .spawn()
                 .insert(MoveTowards)
@@ -72,7 +72,7 @@ fn move_to(
     time: Res<Time>,
     mut query: Query<&mut Transform, With<MoveTowards>>,
 ) {
-    for mut transform in query.iter_mut() {
+    for mut transform in &mut query {
         let pos = transform.translation.truncate();
         if let Some(nearest) = treeaccess.tree.nearest_neighbor(&pos.to_array()) {
             let towards = nearest.vec - pos;
