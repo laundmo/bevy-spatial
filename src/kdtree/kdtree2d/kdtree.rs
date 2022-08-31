@@ -24,7 +24,7 @@ where
     /// The component which this tree tracks.
     type TComp = TComp;
 
-    #[doc(hidden)]
+    /// No-op due to kd-tree not supporting modification.    
     fn update_moved(
         &mut self,
         mut _set: ParamSet<(
@@ -34,9 +34,9 @@ where
     ) {
     }
 
-    #[doc(hidden)]
-    // this just recreates the tree with all tracked entities.
-    // does not actually only add the added entities.
+    /// Add entities to kd-tree, from bevy query. Used internally and called from a system.
+    ///
+    /// Due to kd-tree not supporting modification, this recreates the tree with all entities.
     fn add_added(
         &mut self,
         mut _commands: Commands,
@@ -49,7 +49,7 @@ where
         self.recreate(all);
     }
 
-    #[doc(hidden)]
+    /// No-op due to kd-tree not supporting modification.    
     fn delete(&mut self, _removed: RemovedComponents<Self::TComp>) {}
 
     /// Squared distance between 2 Vec3s.
@@ -94,7 +94,9 @@ where
             .collect::<Vec<(Vec3, Entity)>>();
     }
 
-    #[doc(hidden)]
+    /// Recreates the tree with the provided entity locations/coordinates.
+    ///
+    /// Only use if manually updating, the plugin will overwrite changes.
     fn recreate(&mut self, all: Vec<(Vec3, Entity)>) {
         let _span_d = info_span!("collect-data").entered();
         let data: Vec<EntityPoint2D> = { all.iter().map(|e| e.into()).collect() };
