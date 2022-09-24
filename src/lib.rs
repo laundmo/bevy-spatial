@@ -39,6 +39,7 @@ pub use self::{
     common::{EntityPoint, EntityPoint2D, EntityPoint3D},
     plugin::SpatialPlugin,
     spatial_access::SpatialAccess,
+    resources_components::TimestepElapsed,
 };
 
 #[cfg(feature = "kdtree")]
