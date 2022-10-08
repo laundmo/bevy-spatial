@@ -11,15 +11,17 @@ use crate::{
 
 /// The core plugin struct which stores metadata for updating and recreating the choosen spatial index.
 ///
+/// Generics:
+///   - `TComp` should be the marker Component which are tracked by this plugin.
+///   - `Access` is the type implementing SpatialAccess.
+///
+///
 /// You should use the following type aliases from their respective features instead.
 ///
 /// | feature | Plugin |
 /// | ------- | ------ |
-/// | kdtree  | [crate::KDTreePlugin2D] |
-/// | rstar   | [crate::RTreePlugin2D] or [crate::RTreePlugin3D] |
-///
-/// TComp should be the marker Component which are tracked by this plugin.
-/// Access is the type implementing SpatialAccess.
+/// | kdtree  | [KDTreePlugin2D](crate::KDTreePlugin2D) |
+/// | rstar   | [RTreePlugin2D](crate::RTreePlugin2D) or [RTreePlugin3D](crate::RTreePlugin3D) |
 pub struct SpatialPlugin<TComp, Access> {
     pub component_type: PhantomData<TComp>,
     pub spatial_access: PhantomData<Access>,

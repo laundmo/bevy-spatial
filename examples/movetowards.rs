@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use bevy_spatial::{DefaultParams, RTreeAccess2D, RTreePlugin2D};
+use bevy_spatial::{DefaultParams, RTreeAccess2D, RTreePlugin2D, SpatialAccess};
 
 #[derive(Component)]
 struct NearestNeighbour;
@@ -73,11 +73,9 @@ fn move_to(
     mut query: Query<&mut Transform, With<MoveTowards>>,
 ) {
     for mut transform in &mut query {
-        let pos = transform.translation.truncate();
-        if let Some(nearest) = treeaccess.tree.nearest_neighbor(&pos.to_array()) {
-            let towards = nearest.vec - pos;
-            transform.translation +=
-                (towards.normalize() * time.delta_seconds() * 64.0).extend(0.0);
+        if let Some(nearest) = treeaccess.nearest_neighbour(transform.translation) {
+            let towards = nearest.0 - transform.translation;
+            transform.translation += towards.normalize() * time.delta_seconds() * 64.0;
         }
     }
 }

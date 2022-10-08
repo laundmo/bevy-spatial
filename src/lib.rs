@@ -16,6 +16,8 @@
 //!
 //! type NNTree = KDTreeAccess2D<TrackedByKDTree>; // type alias for later
 //!
+//! // spawn some entities with the TrackedByKDTree component
+//!
 //! fn use_neighbour(tree: Res<NNTree>){
 //!     if let Some((pos, entity)) = tree.nearest_neighbour(Vec2::ZERO) {
 //!         // pos: Vec3
@@ -38,8 +40,8 @@ mod spatial_access;
 pub use self::{
     common::{EntityPoint, EntityPoint2D, EntityPoint3D},
     plugin::SpatialPlugin,
-    spatial_access::SpatialAccess,
     resources_components::TimestepElapsed,
+    spatial_access::SpatialAccess,
 };
 
 #[cfg(feature = "kdtree")]

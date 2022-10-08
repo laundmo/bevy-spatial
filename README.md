@@ -6,6 +6,8 @@
 
 A bevy plugin to track your entities in spatial indices and query them.
 
+![crates.io](https://img.shields.io/crates/v/bevy_spatial.svg)
+
 NOTE: You will need to enable at least one of the features.
 
 Currently implemented features:
@@ -45,8 +47,11 @@ For more details on usage see [Examples](https://github.com/laundmo/bevy-spatial
 
 | bevy | bevy_spatial |
 | ---- | ------------ |
+| 0.8  | 0.3.0        |
 | 0.8  | 0.2.1        |
 | 0.7  | 0.1          |
+
+wasm caveats: the rayon acceleration for kdtree is disabled on wasm, making it a bit slower.
 
 ## TODOs and Ideas
 
