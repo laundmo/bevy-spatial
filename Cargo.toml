@@ -21,6 +21,7 @@ num-traits = { version = "0.2.15", optional = true }
 
 
 [features]
+default = []
 rstar = ["dep:rstar"]
 kdtree = ["dep:kd-tree", "dep:typenum", "dep:num-traits"]
 
@@ -28,6 +29,8 @@ kdtree = ["dep:kd-tree", "dep:typenum", "dep:num-traits"]
 bevy = { version = "0.8" }
 bevy-aabb-instancing = "0.3.0"
 
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+kd-tree = { version = "0.4.1", optional = true }
 
 [profile.dev]
 opt-level = 1
@@ -43,11 +46,13 @@ debug = true
 name = "distance2d"
 required-features = ["kdtree"]
 
-
 [[example]]
 name = "distance3d"
 required-features = ["rstar"]
 
+[[example]]
+name = "modify_timestep"
+required-features = ["kdtree"]
 
 [[example]]
 name = "movetowards"
@@ -55,3 +60,4 @@ required-features = ["rstar"]
 
 [package.metadata.docs.rs]
 all-features = true
+cargo-args = ["-Zunstable-options", "-Zrustdoc-scrape-examples=examples"]

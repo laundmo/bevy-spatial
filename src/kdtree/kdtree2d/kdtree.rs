@@ -102,7 +102,10 @@ where
         let data: Vec<EntityPoint2D> = { all.iter().map(|e| e.into()).collect() };
         _span_d.exit();
         let _span = info_span!("recreate").entered();
+        #[cfg(not(target_arch = "wasm32"))]
         let tree: KdTree<EntityPoint2D> = KdTree::par_build_by_ordered_float(data);
+        #[cfg(target_arch = "wasm32")]
+        let tree: KdTree<EntityPoint2D> = KdTree::build_by_ordered_float(data);
         self.tree = tree;
     }
 
