@@ -27,7 +27,8 @@ kdtree = ["dep:kd-tree", "dep:typenum", "dep:num-traits"]
 
 [dev-dependencies]
 bevy = { version = "0.8" }
-bevy-aabb-instancing = "0.3.0"
+# bevy-aabb-instancing = "0.3.0"
+wasm-server-runner = "0.3.0"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 kd-tree = { version = "0.4.1", optional = true }
