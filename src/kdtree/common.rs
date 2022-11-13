@@ -1,9 +1,11 @@
 use std::marker::PhantomData;
 
+use bevy::prelude::Resource;
 use kd_tree::{KdPoint, KdTree};
 
 use crate::plugin::SpatialPlugin;
 
+#[derive(Resource)]
 pub struct KDTreeAccess<TComp, KDItem>
 where
     KDItem: KdPoint,

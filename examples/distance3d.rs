@@ -23,7 +23,7 @@ fn main() {
         .run();
 }
 
-#[derive(Clone)]
+#[derive(Resource, Clone)]
 struct MaterialHandles {
     orange_red: Handle<StandardMaterial>,
     black: Handle<StandardMaterial>,
@@ -47,12 +47,12 @@ fn setup(
         color: Color::WHITE,
         brightness: 0.5,
     });
-    commands.spawn_bundle(Camera3dBundle {
+    commands.spawn(Camera3dBundle {
         transform: Transform::from_xyz(0.0, 100.0, 900.0).looking_at(Vec3::ZERO, Vec3::Y),
         ..default()
     });
     commands
-        .spawn_bundle(PbrBundle {
+        .spawn(PbrBundle {
             mesh: meshes.add(Mesh::from(shape::Cube { size: 10.0 })),
             material: handles.blue.clone(),
             transform: Transform::from_xyz(0.0, 0.5, 0.0),
@@ -64,7 +64,7 @@ fn setup(
         for y in -20..20 {
             for z in -6..6 {
                 commands
-                    .spawn_bundle(PbrBundle {
+                    .spawn(PbrBundle {
                         mesh: meshes.add(Mesh::from(shape::Cube { size: 4.0 })),
                         material: handles.orange_red.clone(),
                         transform: Transform::from_xyz(

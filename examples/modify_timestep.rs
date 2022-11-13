@@ -26,65 +26,42 @@ fn main() {
 type NNTree = KDTreeAccess2D<NearestNeighbour>;
 
 fn setup(mut commands: Commands) {
-    commands.spawn_bundle(Camera2dBundle::default());
-    commands.spawn().insert(Chaser).insert_bundle(SpriteBundle {
-        sprite: Sprite {
-            color: Color::BLUE,
-            custom_size: Some(Vec2::new(10.0, 10.0)),
+    commands.spawn(Camera2dBundle::default());
+
+    commands.spawn((
+        Chaser,
+        SpriteBundle {
+            sprite: Sprite {
+                color: Color::BLUE,
+                custom_size: Some(Vec2::new(10.0, 10.0)),
+                ..default()
+            },
+            transform: Transform::from_translation(Vec3::ZERO),
             ..default()
         },
-        transform: Transform::from_translation(Vec3::ZERO),
-        ..default()
-    });
+    ));
 
-    commands
-        .spawn()
-        .insert(NearestNeighbour)
-        .insert_bundle(SpriteBundle {
-            sprite: Sprite {
-                color: Color::RED,
-                custom_size: Some(Vec2::new(10.0, 10.0)),
+    let neighbours = [
+        (Color::RED, Vec3::Y * 100.),
+        (Color::RED, Vec3::NEG_Y * 100.),
+        (Color::RED, Vec3::X * 100.),
+        (Color::RED, Vec3::NEG_X * 100.),
+    ];
+
+    for (color, position) in neighbours.iter() {
+        commands.spawn((
+            NearestNeighbour,
+            SpriteBundle {
+                sprite: Sprite {
+                    color: *color,
+                    custom_size: Some(Vec2::new(10.0, 10.0)),
+                    ..default()
+                },
+                transform: Transform::from_translation(*position),
                 ..default()
             },
-            transform: Transform::from_translation(Vec3::Y * 100.),
-            ..default()
-        });
-    commands
-        .spawn()
-        .insert(NearestNeighbour)
-        .insert_bundle(SpriteBundle {
-            sprite: Sprite {
-                color: Color::RED,
-                custom_size: Some(Vec2::new(10.0, 10.0)),
-                ..default()
-            },
-            transform: Transform::from_translation(Vec3::NEG_Y * 100.),
-            ..default()
-        });
-    commands
-        .spawn()
-        .insert(NearestNeighbour)
-        .insert_bundle(SpriteBundle {
-            sprite: Sprite {
-                color: Color::RED,
-                custom_size: Some(Vec2::new(10.0, 10.0)),
-                ..default()
-            },
-            transform: Transform::from_translation(Vec3::X * 100.),
-            ..default()
-        });
-    commands
-        .spawn()
-        .insert(NearestNeighbour)
-        .insert_bundle(SpriteBundle {
-            sprite: Sprite {
-                color: Color::RED,
-                custom_size: Some(Vec2::new(10.0, 10.0)),
-                ..default()
-            },
-            transform: Transform::from_translation(Vec3::NEG_X * 100.),
-            ..default()
-        });
+        ));
+    }
 }
 
 fn rotate_around(mut query: Query<&mut Transform, With<NearestNeighbour>>) {

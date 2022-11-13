@@ -34,18 +34,21 @@ type NNTree = KDTreeAccess2D<NearestNeighbourComponent>;
 
 fn setup(mut commands: Commands) {
     commands.spawn_bundle(Camera2dBundle::default());
-    commands.spawn().insert(Cursor).insert_bundle(SpriteBundle {
-        sprite: Sprite {
-            color: Color::rgb(0.0, 0.0, 1.0),
-            custom_size: Some(Vec2::new(10.0, 10.0)),
+    commands.spawn((
+        Cursor,
+        SpriteBundle {
+            sprite: Sprite {
+                color: Color::rgb(0.0, 0.0, 1.0),
+                custom_size: Some(Vec2::new(10.0, 10.0)),
+                ..default()
+            },
+            transform: Transform {
+                translation: Vec3::ZERO,
+                ..default()
+            },
             ..default()
         },
-        transform: Transform {
-            translation: Vec3::ZERO,
-            ..default()
-        },
-        ..default()
-    });
+    ));
     let sprite = Sprite {
         color: Color::ORANGE_RED,
         custom_size: Some(Vec2::new(6.0, 6.0)),
@@ -53,17 +56,17 @@ fn setup(mut commands: Commands) {
     };
     for x in -100..100 {
         for y in -100..100 {
-            commands
-                .spawn()
-                .insert(NearestNeighbourComponent)
-                .insert_bundle(SpriteBundle {
+            commands.spawn((
+                NearestNeighbourComponent,
+                SpriteBundle {
                     sprite: sprite.clone(),
                     transform: Transform {
                         translation: Vec3::new((x * 4) as f32, (y * 4) as f32, 0.0),
                         ..default()
                     },
                     ..default()
-                });
+                },
+            ));
         }
     }
 }

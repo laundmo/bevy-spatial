@@ -20,13 +20,12 @@ fn main() {
 type NNTree = RTreeAccess2D<NearestNeighbour, DefaultParams>;
 
 fn setup(mut commands: Commands) {
-    commands.spawn_bundle(Camera2dBundle::default());
+    commands.spawn(Camera2dBundle::default());
     for x in -6..6 {
         for y in -6..6 {
-            commands
-                .spawn()
-                .insert(NearestNeighbour)
-                .insert_bundle(SpriteBundle {
+            commands.spawn((
+                NearestNeighbour,
+                SpriteBundle {
                     sprite: Sprite {
                         color: Color::rgb(0.7, 0.3, 0.5),
                         custom_size: Some(Vec2::new(10.0, 10.0)),
@@ -37,7 +36,8 @@ fn setup(mut commands: Commands) {
                         ..default()
                     },
                     ..default()
-                });
+                },
+            ));
         }
     }
 }
@@ -48,10 +48,9 @@ fn mouseclick(mut commands: Commands, mouse_input: Res<Input<MouseButton>>, wind
         if let Some(mut pos) = win.cursor_position() {
             pos.x -= win.width() / 2.0;
             pos.y -= win.height() / 2.0;
-            commands
-                .spawn()
-                .insert(MoveTowards)
-                .insert_bundle(SpriteBundle {
+            commands.spawn((
+                MoveTowards,
+                SpriteBundle {
                     sprite: Sprite {
                         color: Color::rgb(0.15, 0.15, 1.0),
                         custom_size: Some(Vec2::new(10.0, 10.0)),
@@ -62,7 +61,8 @@ fn mouseclick(mut commands: Commands, mouse_input: Res<Input<MouseButton>>, wind
                         ..default()
                     },
                     ..default()
-                });
+                },
+            ));
         }
     }
 }

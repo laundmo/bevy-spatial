@@ -34,7 +34,7 @@ impl<T> MovementTracked<T> {
 /// }
 /// ```
 /// `NearestNeighbourMarker` in this case refers to the (marker) component you also passed to the Plugin.
-#[derive(Default)]
+#[derive(Resource, Default)]
 pub struct TimestepElapsed<TComp>(pub Timer, pub(crate) PhantomData<TComp>);
 
 impl<TComp> Deref for TimestepElapsed<TComp> {

@@ -2,7 +2,7 @@
 name = "bevy_spatial"
 description = "A crate for tracking bevy entities in spatial indices."
 documentation = "https://docs.rs/bevy_spatial"
-version = "0.3.0"
+version = "0.4.0"
 license = "MIT OR Apache-2.0"
 edition = "2021"
 keywords = ["gamedev", "bevy", "spatial", "kdtree", "rtree"]
@@ -11,7 +11,7 @@ readme = "README.md"
 authors = ["laundmo"]
 
 [dependencies]
-bevy = { version = "0.8", default-features = false }
+bevy = { version = "0.9", default-features = false }
 # R*-Tree dependencies
 rstar = { version = "0.9.3", optional = true }
 # KD-Tree dependencies
@@ -26,10 +26,11 @@ rstar = ["dep:rstar"]
 kdtree = ["dep:kd-tree", "dep:typenum", "dep:num-traits"]
 
 [dev-dependencies]
-bevy = { version = "0.8" }
+bevy = { version = "0.9" }
 # bevy-aabb-instancing = "0.3.0"
 wasm-server-runner = "0.3.0"
 
+# without the rayon feature 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 kd-tree = { version = "0.4.1", optional = true }
 

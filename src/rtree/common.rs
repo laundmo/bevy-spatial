@@ -1,9 +1,11 @@
 use std::marker::PhantomData;
 
+use bevy::prelude::Resource;
 use rstar::{RTree, RTreeObject, RTreeParams};
 
 use crate::{common::EntityPoint, plugin::SpatialPlugin};
 
+#[derive(Resource)]
 pub struct RTreeAccess<TComp, RObj, Params>
 where
     RObj: RTreeObject,

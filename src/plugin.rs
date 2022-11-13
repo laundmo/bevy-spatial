@@ -58,7 +58,7 @@ impl<TComp, Access> Default for SpatialPlugin<TComp, Access> {
 impl<TComp, Access> Plugin for SpatialPlugin<TComp, Access>
 where
     TComp: Component + Send + Sync + 'static,
-    Access: SpatialAccess + From<SpatialPlugin<TComp, Access>> + Send + Sync + 'static,
+    Access: Resource + SpatialAccess + From<SpatialPlugin<TComp, Access>> + Send + Sync + 'static,
 {
     fn build(&self, app: &mut App) {
         let tree_access = Access::from(*self);
@@ -70,7 +70,7 @@ where
         // decide whether to use the timestep
         if let Some(step) = self.timestep {
             app.insert_resource(TimestepElapsed::<TComp>(
-                Timer::from_seconds(step, false),
+                Timer::from_seconds(step, TimerMode::Once),
                 PhantomData,
             ));
             app.add_system_set_to_stage(
