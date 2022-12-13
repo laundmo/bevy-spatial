@@ -29,6 +29,9 @@
 //! For more details see [Examples](https://github.com/laundmo/bevy-spatial/tree/main/examples)
 
 mod common;
+mod coord_extract;
+mod timestep;
+
 #[cfg(feature = "kdtree")]
 mod kdtree;
 mod plugin;

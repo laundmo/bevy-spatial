@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use bevy::prelude::*;
+use bevy::{app::PluginGroupBuilder, prelude::*};
 
 use crate::{
     common::run_if_elapsed,
@@ -84,5 +84,16 @@ where
             app.add_system_to_stage(CoreStage::PostUpdate, add_added::<Access>)
                 .add_system_to_stage(CoreStage::PostUpdate, update_moved::<Access>);
         }
+    }
+}
+
+pub struct SpatialPlugins<TComp>(PhantomData<TComp>);
+
+impl<TComp> PluginGroup for SpatialPlugins<TComp> {
+    fn build(self) -> PluginGroupBuilder {
+        let group = PluginGroupBuilder::start::<Self>();
+        group
+            .add(CoordinateExtractPlugin::<TComp>)
+            .add(KDTreePlugin::<Vec2, TComp>)
     }
 }

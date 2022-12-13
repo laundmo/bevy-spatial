@@ -2,21 +2,6 @@ use bevy::{ecs::schedule::ShouldRun, prelude::*};
 
 use crate::resources_components::TimestepElapsed;
 
-pub fn run_if_elapsed<TComp>(
-    mut elapsed: ResMut<TimestepElapsed<TComp>>,
-    time: Res<Time>,
-) -> ShouldRun
-where
-    TComp: Component,
-{
-    if elapsed.tick(time.delta()).finished() {
-        elapsed.reset();
-        ShouldRun::Yes
-    } else {
-        ShouldRun::No
-    }
-}
-
 #[derive(Copy, Clone, Debug)]
 pub struct EntityPoint<Unit>
 where
