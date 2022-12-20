@@ -28,9 +28,10 @@
 //!
 //! For more details see [Examples](https://github.com/laundmo/bevy-spatial/tree/main/examples)
 
-mod common;
+// mod common;
 mod coord_extract;
 mod timestep;
+mod types;
 
 #[cfg(feature = "kdtree")]
 mod kdtree;
@@ -41,10 +42,10 @@ mod rtree;
 mod spatial_access;
 
 pub use self::{
-    common::{EntityPoint, EntityPoint2D, EntityPoint3D},
+    // common::{EntityPoint, EntityPoint2D, EntityPoint3D},
     plugin::SpatialPlugin,
-    resources_components::TimestepElapsed,
     spatial_access::SpatialAccess,
+    timestep::TimestepElapsed,
 };
 
 #[cfg(feature = "kdtree")]
