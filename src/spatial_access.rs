@@ -37,22 +37,20 @@ where
         mut commands: Commands,
         mut query: Query<TrackedQuery<Self::TComp>, With<Self::TComp>>,
     ) {
-
         // get added entities, and add a MovementTracker
-        let added_dist = info_span!(
-            "compute_added_entities",
-            name = "compute_added_entities"
-        ).entered();
-        let added: Vec<_> = query.iter()
+        let added_dist =
+            info_span!("compute_added_entities", name = "compute_added_entities").entered();
+        let added: Vec<_> = query
+            .iter()
             .filter(|e| e.added_tracker.is_added())
             .map(|e| {
-                commands.entity(e.entity)
+                commands
+                    .entity(e.entity)
                     .insert(MovementTracked::<Self::TComp>::new(e.transform.translation));
                 (e.transform.translation, e.entity)
             })
             .collect();
         added_dist.exit();
-
 
         // get already existing entities that moved a significant distance, and update their
         // last position in the `movement_tracker`
@@ -67,12 +65,13 @@ where
                 if e.change_tracker.is_changed() && !e.added_tracker.is_added() {
                     // optimization if distance deltas do not matter
                     if self.get_min_dist() <= 0.0 {
-                        return true
+                        return true;
                     }
                     // movement_tracker will always be present at this point
                     return self.distance_squared(
                         e.transform.translation,
-                        e.movement_tracker.as_ref().unwrap().lastpos) >= self.get_min_dist().powi(2)
+                        e.movement_tracker.as_ref().unwrap().lastpos,
+                    ) >= self.get_min_dist().powi(2);
                 }
                 false
             })
@@ -95,7 +94,9 @@ where
             recreate.exit();
         } else {
             let update = info_span!("partial_update", name = "partial_update").entered();
-            added.into_iter().for_each(|(curpos, entity)| self.add_point((curpos, entity)));
+            added
+                .into_iter()
+                .for_each(|(curpos, entity)| self.add_point((curpos, entity)));
             moved.into_iter().for_each(|(curpos, entity)| {
                 if self.remove_entity(entity) {
                     self.add_point((curpos, entity));
@@ -104,7 +105,6 @@ where
             update.exit();
         }
     }
-
 
     /// Delete despawned entities from datastructure. Used internally and called from a system.
     fn delete(&mut self, removed: RemovedComponents<Self::TComp>) {
@@ -150,7 +150,6 @@ pub fn update_tree<SAcc>(
 {
     acc.update_tree(commands, query);
 }
-
 
 pub fn delete<SAcc>(mut acc: ResMut<SAcc>, removed: RemovedComponents<SAcc::TComp>)
 where

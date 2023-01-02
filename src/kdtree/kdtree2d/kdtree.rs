@@ -33,7 +33,10 @@ where
         query: Query<TrackedQuery<Self::TComp>, With<Self::TComp>>,
     ) {
         let _span = info_span!("add-added").entered();
-        let all: Vec<(Vec3, Entity)> = query.iter().map(|e| (e.transform.translation, e.entity)).collect();
+        let all: Vec<(Vec3, Entity)> = query
+            .iter()
+            .map(|e| (e.transform.translation, e.entity))
+            .collect();
 
         self.recreate(all);
     }

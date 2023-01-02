@@ -5,7 +5,7 @@ use bevy::prelude::*;
 use crate::{
     common::run_if_elapsed,
     resources_components::TimestepElapsed,
-    spatial_access::{update_tree, delete},
+    spatial_access::{delete, update_tree},
     SpatialAccess,
 };
 
@@ -77,7 +77,7 @@ where
                 CoreStage::PostUpdate,
                 SystemSet::new()
                     .with_run_criteria(run_if_elapsed::<TComp>)
-                    .with_system(update_tree::<Access>)
+                    .with_system(update_tree::<Access>),
             );
         } else {
             app.add_system_to_stage(CoreStage::PostUpdate, update_tree::<Access>);
