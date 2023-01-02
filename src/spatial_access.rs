@@ -63,7 +63,7 @@ where
                     }
                     // safe to unwrap because we only deal with entities that have been previously added
                     let last_pos = self.get_last_pos(e.entity).unwrap();
-                    return self.distance_squared( e.transform.translation, last_pos
+                    return self.distance_squared( e.transform.translation, *last_pos
                     ) >= self.get_min_dist().powi(2);
                 }
                 false
@@ -127,7 +127,7 @@ where
     /// Get the amount of moved/changed/added entities after which to perform a full recreate.
     fn get_recreate_after(&self) -> usize;
     /// Get last tracked position of an entity
-    fn get_last_pos(&self, entity: Entity) -> Option<Vec3>;
+    fn get_last_pos(&self, entity: Entity) -> Option<&Vec3>;
 }
 
 pub fn update_tree<SAcc>(
