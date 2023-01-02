@@ -5,7 +5,7 @@ use bevy::prelude::*;
 use crate::{
     common::run_if_elapsed,
     resources_components::TimestepElapsed,
-    spatial_access::{add_added, delete, update_moved},
+    spatial_access::{update_tree, delete},
     SpatialAccess,
 };
 
@@ -64,7 +64,7 @@ where
         let tree_access = Access::from(*self);
 
         app.insert_resource(tree_access)
-            .add_startup_system_to_stage(StartupStage::PostStartup, add_added::<Access>)
+            .add_startup_system_to_stage(StartupStage::PostStartup, update_tree::<Access>)
             .add_system_to_stage(CoreStage::PostUpdate, delete::<Access>);
 
         // decide whether to use the timestep
@@ -77,12 +77,10 @@ where
                 CoreStage::PostUpdate,
                 SystemSet::new()
                     .with_run_criteria(run_if_elapsed::<TComp>)
-                    .with_system(add_added::<Access>)
-                    .with_system(update_moved::<Access>),
+                    .with_system(update_tree::<Access>)
             );
         } else {
-            app.add_system_to_stage(CoreStage::PostUpdate, add_added::<Access>)
-                .add_system_to_stage(CoreStage::PostUpdate, update_moved::<Access>);
+            app.add_system_to_stage(CoreStage::PostUpdate, update_tree::<Access>);
         }
     }
 }

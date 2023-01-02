@@ -24,27 +24,16 @@ where
     /// The component which this tree tracks.
     type TComp = TComp;
 
-    /// No-op due to kd-tree not supporting modification.    
-    fn update_moved(
-        &mut self,
-        mut _set: ParamSet<(
-            Query<TrackedQuery<Self::TComp>, Changed<Transform>>,
-            Query<TrackedQuery<Self::TComp>>,
-        )>,
-    ) {
-    }
-
     /// Add entities to kd-tree, from bevy query. Used internally and called from a system.
     ///
     /// Due to kd-tree not supporting modification, this recreates the tree with all entities.
-    fn add_added(
+    fn update_tree(
         &mut self,
         mut _commands: Commands,
-        all_query: Query<(Entity, &Transform), With<Self::TComp>>,
-        _added_query: Query<(Entity, &Transform), Added<Self::TComp>>,
+        query: Query<TrackedQuery<Self::TComp>, With<Self::TComp>>,
     ) {
         let _span = info_span!("add-added").entered();
-        let all: Vec<(Vec3, Entity)> = all_query.iter().map(|i| (i.1.translation, i.0)).collect();
+        let all: Vec<(Vec3, Entity)> = query.iter().map(|e| (e.transform.translation, e.entity)).collect();
 
         self.recreate(all);
     }

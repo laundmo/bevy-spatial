@@ -9,11 +9,13 @@ use crate::resources_components::MovementTracked;
 #[world_query(mutable)]
 pub struct TrackedQuery<'a, TComp>
 where
-    TComp: Sync + Send + 'static,
+    TComp: Component + Sync + Send + 'static,
 {
     pub entity: Entity,
     pub transform: &'a Transform,
-    pub tracker: &'static mut MovementTracked<TComp>,
+    pub change_tracker: ChangeTrackers<Transform>,
+    pub added_tracker: ChangeTrackers<TComp>,
+    pub movement_tracker: Option<&'static mut MovementTracked<TComp>>,
 }
 
 pub trait SpatialAccess
@@ -22,95 +24,87 @@ where
 {
     type TComp;
 
-    /// Update moved entities in datastructure, from bevy query. Used internally and called from a system.
-    fn update_moved(
+    /// Update the data structure by adding:
+    /// - new entities
+    /// - entities that moved more than `self.get_min_dist()`
+    ///
+    /// If the number of new/updated entities is larger than `self.get_recreate_after()`,
+    /// the whole data structure gets re-created from scratch.
+    ///
+    /// Used internally and called from a system.
+    fn update_tree(
         &mut self,
-        mut set: ParamSet<(
-            Query<TrackedQuery<Self::TComp>, Changed<Transform>>,
-            Query<TrackedQuery<Self::TComp>>,
-        )>,
+        mut commands: Commands,
+        mut query: Query<TrackedQuery<Self::TComp>, With<Self::TComp>>,
     ) {
+
+        // get added entities, and add a MovementTracker
+        let added_dist = info_span!(
+            "compute_added_entities",
+            name = "compute_added_entities"
+        ).entered();
+        let added: Vec<_> = query.iter()
+            .filter(|e| e.added_tracker.is_added())
+            .map(|e| {
+                commands.entity(e.entity)
+                    .insert(MovementTracked::<Self::TComp>::new(e.transform.translation));
+                (e.transform.translation, e.entity)
+            })
+            .collect();
+        added_dist.exit();
+
+
+        // get already existing entities that moved a significant distance, and update their
+        // last position in the `movement_tracker`
         let move_dist = info_span!(
             "compute_moved_significant_distance",
             name = "compute_moved_significant_distance"
         )
         .entered();
-        let moved: Vec<(Entity, Vec3, Vec3)> = set
-            .p0()
-            .iter()
+        let moved: Vec<_> = query
+            .iter_mut()
             .filter(|e| {
-                self.distance_squared(e.transform.translation, e.tracker.lastpos)
-                    >= self.get_min_dist().powi(2)
+                if e.change_tracker.is_changed() && !e.added_tracker.is_added() {
+                    // optimization if distance deltas do not matter
+                    if self.get_min_dist() <= 0.0 {
+                        return true
+                    }
+                    // movement_tracker will always be present at this point
+                    return self.distance_squared(
+                        e.transform.translation,
+                        e.movement_tracker.as_ref().unwrap().lastpos) >= self.get_min_dist().powi(2)
+                }
+                false
             })
-            .map(|e| (e.entity, e.tracker.lastpos, e.transform.translation))
+            .map(|e| {
+                // update the movement tracker
+                e.movement_tracker.unwrap().lastpos = e.transform.translation;
+                (e.transform.translation, e.entity)
+            })
             .collect();
         move_dist.exit();
 
-        if moved.len() >= self.get_recreate_after() {
+        if added.len() + moved.len() >= self.get_recreate_after() {
             let recreate = info_span!("recreate_with_all", name = "recreate_with_all").entered();
-            let all: Vec<(Vec3, Entity)> = set
-                .p1()
-                .iter_mut()
-                .map(|mut tqi| {
-                    let r = (tqi.transform.translation, tqi.entity);
-                    tqi.tracker.lastpos = r.0;
-                    r
-                })
-                .collect();
-
-            self.recreate(all);
-            recreate.exit();
-        } else {
-            let update = info_span!("partial_update", name = "partial_update").entered();
-            let mut p1 = set.p1();
-            for (entity, lastpos, curpos) in moved {
-                let mut mut_tracked = p1.get_mut(entity).unwrap();
-                if self.remove_point((lastpos, entity)) {
-                    self.add_point((curpos, entity));
-                    mut_tracked.tracker.lastpos = curpos;
-                }
-            }
-            update.exit();
-        }
-    }
-
-    /// Add entities which recently had the tracked component added. Used internally and called from a system.
-    fn add_added(
-        &mut self,
-        mut commands: Commands,
-        all_query: Query<(Entity, &Transform), With<Self::TComp>>,
-        added_query: Query<(Entity, &Transform), Added<Self::TComp>>,
-    ) {
-        let added: Vec<(Entity, &Transform)> = added_query.iter().collect();
-
-        if added.len() >= self.size() / 2 {
-            let recreate = info_span!("recreate_with_all", name = "recreate_with_all").entered();
-
-            let all: Vec<(Vec3, Entity)> = all_query
+            let all: Vec<(Vec3, Entity)> = query
                 .iter()
-                .map(|(entity, pos)| {
-                    let r = (pos.translation, entity);
-                    commands
-                        .entity(r.1)
-                        .insert(MovementTracked::<Self::TComp>::new(r.0));
-                    r
-                })
+                .map(|e| (e.transform.translation, e.entity))
                 .collect();
 
             self.recreate(all);
             recreate.exit();
         } else {
             let update = info_span!("partial_update", name = "partial_update").entered();
-
-            for (entity, transform) in added {
-                self.add_point((transform.translation, entity));
-                commands
-                    .entity(entity)
-                    .insert(MovementTracked::<Self::TComp>::new(transform.translation));
-            }
+            added.into_iter().for_each(|(curpos, entity)| self.add_point((curpos, entity)));
+            moved.into_iter().for_each(|(curpos, entity)| {
+                if self.remove_entity(entity) {
+                    self.add_point((curpos, entity));
+                }
+            });
             update.exit();
         }
     }
+
 
     /// Delete despawned entities from datastructure. Used internally and called from a system.
     fn delete(&mut self, removed: RemovedComponents<Self::TComp>) {
@@ -147,28 +141,16 @@ where
     fn get_recreate_after(&self) -> usize;
 }
 
-pub fn update_moved<SAcc>(
-    mut acc: ResMut<SAcc>,
-    set: ParamSet<(
-        Query<TrackedQuery<SAcc::TComp>, Changed<Transform>>,
-        Query<TrackedQuery<SAcc::TComp>>,
-    )>,
-) where
-    SAcc: SpatialAccess + Resource + Sync,
-{
-    acc.update_moved(set);
-}
-
-pub fn add_added<SAcc>(
+pub fn update_tree<SAcc>(
     mut acc: ResMut<SAcc>,
     commands: Commands,
-    all_query: Query<(Entity, &Transform), With<SAcc::TComp>>,
-    added_query: Query<(Entity, &Transform), Added<SAcc::TComp>>,
+    query: Query<TrackedQuery<SAcc::TComp>, With<SAcc::TComp>>,
 ) where
     SAcc: SpatialAccess + Resource + Sync,
 {
-    acc.add_added(commands, all_query, added_query);
+    acc.update_tree(commands, query);
 }
+
 
 pub fn delete<SAcc>(mut acc: ResMut<SAcc>, removed: RemovedComponents<SAcc::TComp>)
 where
