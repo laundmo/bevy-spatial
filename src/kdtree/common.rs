@@ -1,6 +1,7 @@
 use std::marker::PhantomData;
 
-use bevy::prelude::Resource;
+use bevy::prelude::{Entity, Resource, Vec3};
+use bevy::utils::HashMap;
 use kd_tree::{KdPoint, KdTree};
 
 use crate::plugin::SpatialPlugin;
@@ -11,6 +12,11 @@ where
     KDItem: KdPoint,
 {
     pub tree: KdTree<KDItem>,
+
+    /// Internal map from entity to the corresponding last position
+    /// (used to make sure that removal logic is correct, and to check for significant moves)
+    pub last_pos_map: HashMap<Entity, Vec3>,
+
     pub component_type: PhantomData<TComp>,
 }
 
@@ -25,6 +31,7 @@ where
 
         KDTreeAccess {
             tree,
+            last_pos_map: Default::default(),
             component_type: PhantomData,
         }
     }

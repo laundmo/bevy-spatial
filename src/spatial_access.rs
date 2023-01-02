@@ -15,7 +15,6 @@ where
     pub transform: &'a Transform,
     pub change_tracker: ChangeTrackers<Transform>,
     pub added_tracker: ChangeTrackers<TComp>,
-    pub movement_tracker: Option<&'static mut MovementTracked<TComp>>,
 }
 
 pub trait SpatialAccess
@@ -32,23 +31,14 @@ where
     /// the whole data structure gets re-created from scratch.
     ///
     /// Used internally and called from a system.
-    fn update_tree(
-        &mut self,
-        mut commands: Commands,
-        mut query: Query<TrackedQuery<Self::TComp>, With<Self::TComp>>,
-    ) {
+    fn update_tree(&mut self, mut query: Query<TrackedQuery<Self::TComp>, With<Self::TComp>>) {
         // get added entities, and add a MovementTracker
         let added_dist =
             info_span!("compute_added_entities", name = "compute_added_entities").entered();
         let added: Vec<_> = query
             .iter()
             .filter(|e| e.added_tracker.is_added())
-            .map(|e| {
-                commands
-                    .entity(e.entity)
-                    .insert(MovementTracked::<Self::TComp>::new(e.transform.translation));
-                (e.transform.translation, e.entity)
-            })
+            .map(|e| (e.transform.translation, e.entity))
             .collect();
         added_dist.exit();
 
@@ -62,24 +52,20 @@ where
         let moved: Vec<_> = query
             .iter_mut()
             .filter(|e| {
+                // only consider existing entities that moved
                 if e.change_tracker.is_changed() && !e.added_tracker.is_added() {
                     // optimization if distance deltas do not matter
                     if self.get_min_dist() <= 0.0 {
                         return true;
                     }
-                    // movement_tracker will always be present at this point
-                    return self.distance_squared(
-                        e.transform.translation,
-                        e.movement_tracker.as_ref().unwrap().lastpos,
-                    ) >= self.get_min_dist().powi(2);
+                    // safe to unwrap because we only deal with entities that have been previously added
+                    let last_pos = self.get_last_pos(e.entity).unwrap();
+                    return self.distance_squared(e.transform.translation, *last_pos)
+                        >= self.get_min_dist().powi(2);
                 }
                 false
             })
-            .map(|e| {
-                // update the movement tracker
-                e.movement_tracker.unwrap().lastpos = e.transform.translation;
-                (e.transform.translation, e.entity)
-            })
+            .map(|e| (e.transform.translation, e.entity))
             .collect();
         move_dist.exit();
 
@@ -139,16 +125,17 @@ where
     fn get_min_dist(&self) -> f32;
     /// Get the amount of moved/changed/added entities after which to perform a full recreate.
     fn get_recreate_after(&self) -> usize;
+    /// Get last tracked position of an entity
+    fn get_last_pos(&self, entity: Entity) -> Option<&Vec3>;
 }
 
 pub fn update_tree<SAcc>(
     mut acc: ResMut<SAcc>,
-    commands: Commands,
     query: Query<TrackedQuery<SAcc::TComp>, With<SAcc::TComp>>,
 ) where
     SAcc: SpatialAccess + Resource + Sync,
 {
-    acc.update_tree(commands, query);
+    acc.update_tree(query);
 }
 
 pub fn delete<SAcc>(mut acc: ResMut<SAcc>, removed: RemovedComponents<SAcc::TComp>)

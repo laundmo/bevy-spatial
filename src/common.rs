@@ -17,7 +17,7 @@ where
     }
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub struct EntityPoint<Unit>
 where
     Unit: PartialEq,
