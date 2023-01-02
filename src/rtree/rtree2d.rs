@@ -56,7 +56,10 @@ where
     /// Only use if manually updating, the plugin will overwrite changes.
     fn recreate(&mut self, all: Vec<(Vec3, Entity)>) {
         let _span_d = info_span!("collect-data").entered();
-        let data: Vec<EntityPoint2D> = all.iter().map(|e| e.into()).collect();
+        let data: Vec<EntityPoint2D> = all.iter().map(|e| {
+            self.last_pos_map.insert(e.1, e.0);
+            e.into()
+        }).collect();
         _span_d.exit();
         let _span = info_span!("recreate").entered();
         let tree: RTree<EntityPoint2D, Params> = RTree::bulk_load_with_params(data);
@@ -67,7 +70,8 @@ where
     ///
     /// Only use if manually updating, the plugin will overwrite changes.
     fn add_point(&mut self, point: (Vec3, Entity)) {
-        self.tree.insert(point.into())
+        self.last_pos_map.insert(point.1, point.0);
+        self.tree.insert(point.into());
     }
 
     /// Removes a point from the tree.
@@ -81,7 +85,9 @@ where
     ///
     /// Only use if manually updating, the plugin will overwrite changes.
     fn remove_entity(&mut self, entity: Entity) -> bool {
-        self.tree.remove(&entity.into()).is_some()
+        // safe to unwrap because we only remove entities that have been previously added
+        let last_pos = self.last_pos_map.remove(&entity).unwrap();
+        self.tree.remove(&(last_pos, entity).into()).is_some()
     }
 
     /// Size of the tree
@@ -98,7 +104,13 @@ where
     fn get_recreate_after(&self) -> usize {
         self.recreate_after
     }
+
+    /// Get last tracked position of an entity
+    fn get_last_pos(&self, entity: Entity) -> Option<&Vec3> {
+        self.last_pos_map.get(&entity)
+    }
 }
+
 
 impl RTreeObject for EntityPoint2D {
     type Envelope = AABB<[f32; 2]>;

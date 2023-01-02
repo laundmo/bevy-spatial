@@ -29,7 +29,6 @@ where
     /// Due to kd-tree not supporting modification, this recreates the tree with all entities.
     fn update_tree(
         &mut self,
-        mut _commands: Commands,
         query: Query<TrackedQuery<Self::TComp>, With<Self::TComp>>,
     ) {
         let _span = info_span!("add-added").entered();
@@ -91,7 +90,10 @@ where
     /// Only use if manually updating, the plugin will overwrite changes.
     fn recreate(&mut self, all: Vec<(Vec3, Entity)>) {
         let _span_d = info_span!("collect-data").entered();
-        let data: Vec<EntityPoint2D> = { all.iter().map(|e| e.into()).collect() };
+        let data: Vec<EntityPoint2D> = { all.iter().map(|e| {
+            self.last_pos_map.insert(e.1, e.0);
+            e.into()
+        }).collect() };
         _span_d.exit();
         let _span = info_span!("recreate").entered();
         #[cfg(not(target_arch = "wasm32"))]
@@ -136,5 +138,10 @@ where
     /// Always zero due to kd-tree being recreated every frame.
     fn get_recreate_after(&self) -> usize {
         0
+    }
+
+    /// Get last tracked position of an entity
+    fn get_last_pos(&self, entity: Entity) -> Option<&Vec3> {
+        self.last_pos_map.get(&entity)
     }
 }

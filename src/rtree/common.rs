@@ -1,9 +1,10 @@
 use std::marker::PhantomData;
 
-use bevy::prelude::Resource;
+use bevy::prelude::{Entity, Resource, Vec3};
+use bevy::utils::HashMap;
 use rstar::{RTree, RTreeObject, RTreeParams};
 
-use crate::{common::EntityPoint, plugin::SpatialPlugin};
+use crate::{common::EntityPoint, plugin::SpatialPlugin, SpatialAccess};
 
 #[derive(Resource)]
 pub struct RTreeAccess<TComp, RObj, Params>
@@ -18,9 +19,14 @@ where
     /// The distance after which a entity is updated in the tree
     pub min_moved: f32,
 
+    /// Internal map from entity to the corresponding last position
+    /// (used to make sure that removal logic is correct, and to check for significant moves)
+    pub last_pos_map: HashMap<Entity, Vec3>,
+
     #[doc(hidden)]
     pub component_type: PhantomData<TComp>,
 }
+
 
 impl<TComp, RObj, Params> From<SpatialPlugin<TComp, RTreeAccess<TComp, RObj, Params>>>
     for RTreeAccess<TComp, RObj, Params>
@@ -35,16 +41,8 @@ where
             tree,
             min_moved: plugin.min_moved,
             recreate_after: plugin.recreate_after,
+            last_pos_map: Default::default(),
             component_type: PhantomData,
         }
-    }
-}
-
-impl<Unit> PartialEq for EntityPoint<Unit>
-where
-    Unit: PartialEq,
-{
-    fn eq(&self, other: &Self) -> bool {
-        self.entity == other.entity
     }
 }
