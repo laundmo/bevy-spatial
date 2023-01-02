@@ -31,10 +31,7 @@ where
     /// the whole data structure gets re-created from scratch.
     ///
     /// Used internally and called from a system.
-    fn update_tree(
-        &mut self,
-        mut query: Query<TrackedQuery<Self::TComp>, With<Self::TComp>>,
-    ) {
+    fn update_tree(&mut self, mut query: Query<TrackedQuery<Self::TComp>, With<Self::TComp>>) {
         // get added entities, and add a MovementTracker
         let added_dist =
             info_span!("compute_added_entities", name = "compute_added_entities").entered();
@@ -63,8 +60,8 @@ where
                     }
                     // safe to unwrap because we only deal with entities that have been previously added
                     let last_pos = self.get_last_pos(e.entity).unwrap();
-                    return self.distance_squared( e.transform.translation, *last_pos
-                    ) >= self.get_min_dist().powi(2);
+                    return self.distance_squared(e.transform.translation, *last_pos)
+                        >= self.get_min_dist().powi(2);
                 }
                 false
             })
@@ -83,7 +80,9 @@ where
             recreate.exit();
         } else {
             let update = info_span!("partial_update", name = "partial_update").entered();
-            added.into_iter().for_each(|(curpos, entity)| self.add_point((curpos, entity)));
+            added
+                .into_iter()
+                .for_each(|(curpos, entity)| self.add_point((curpos, entity)));
             moved.into_iter().for_each(|(curpos, entity)| {
                 if self.remove_entity(entity) {
                     self.add_point((curpos, entity));

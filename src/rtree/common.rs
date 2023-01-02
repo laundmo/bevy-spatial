@@ -27,7 +27,6 @@ where
     pub component_type: PhantomData<TComp>,
 }
 
-
 impl<TComp, RObj, Params> From<SpatialPlugin<TComp, RTreeAccess<TComp, RObj, Params>>>
     for RTreeAccess<TComp, RObj, Params>
 where

@@ -51,11 +51,14 @@ where
     ///
     /// Only use if manually updating, the plugin will overwrite changes.
     fn recreate(&mut self, all: Vec<(Vec3, Entity)>) {
-        let tree: RTree<EntityPoint3D, Params> =
-            RTree::bulk_load_with_params(all.iter().map(|e| {
-                self.last_pos_map.insert(e.1, e.0);
-                e.into()
-            }).collect());
+        let tree: RTree<EntityPoint3D, Params> = RTree::bulk_load_with_params(
+            all.iter()
+                .map(|e| {
+                    self.last_pos_map.insert(e.1, e.0);
+                    e.into()
+                })
+                .collect(),
+        );
         self.tree = tree;
     }
 

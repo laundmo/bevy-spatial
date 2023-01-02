@@ -27,10 +27,7 @@ where
     /// Add entities to kd-tree, from bevy query. Used internally and called from a system.
     ///
     /// Due to kd-tree not supporting modification, this recreates the tree with all entities.
-    fn update_tree(
-        &mut self,
-        query: Query<TrackedQuery<Self::TComp>, With<Self::TComp>>,
-    ) {
+    fn update_tree(&mut self, query: Query<TrackedQuery<Self::TComp>, With<Self::TComp>>) {
         let _span = info_span!("add-added").entered();
         let all: Vec<(Vec3, Entity)> = query
             .iter()
@@ -90,10 +87,14 @@ where
     /// Only use if manually updating, the plugin will overwrite changes.
     fn recreate(&mut self, all: Vec<(Vec3, Entity)>) {
         let _span_d = info_span!("collect-data").entered();
-        let data: Vec<EntityPoint2D> = { all.iter().map(|e| {
-            self.last_pos_map.insert(e.1, e.0);
-            e.into()
-        }).collect() };
+        let data: Vec<EntityPoint2D> = {
+            all.iter()
+                .map(|e| {
+                    self.last_pos_map.insert(e.1, e.0);
+                    e.into()
+                })
+                .collect()
+        };
         _span_d.exit();
         let _span = info_span!("recreate").entered();
         #[cfg(not(target_arch = "wasm32"))]
