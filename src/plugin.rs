@@ -3,11 +3,14 @@ use std::marker::PhantomData;
 use bevy::{app::PluginGroupBuilder, prelude::*};
 
 use crate::{
-    common::run_if_elapsed,
-    resources_components::TimestepElapsed,
     spatial_access::{add_added, delete, update_moved},
+    timestep::{run_if_elapsed, TimestepElapsed},
     SpatialAccess,
 };
+
+// Trait bound aliases
+trait TComp: Component + Send + Sync + 'static {}
+impl<T> TComp for T where T: Component + Send + Sync + 'static {}
 
 /// The core plugin struct which stores metadata for updating and recreating the choosen spatial index.
 ///

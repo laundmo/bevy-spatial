@@ -29,27 +29,29 @@
 //! For more details see [Examples](https://github.com/laundmo/bevy-spatial/tree/main/examples)
 
 // mod common;
-mod coord_extract;
-mod timestep;
-mod types;
 
-#[cfg(feature = "kdtree")]
-mod kdtree;
-mod plugin;
-mod resources_components;
-#[cfg(feature = "rstar")]
-mod rtree;
-mod spatial_access;
+mod aabb;
+mod point;
+// mod timestep;
+// mod types;
 
-pub use self::{
-    // common::{EntityPoint, EntityPoint2D, EntityPoint3D},
-    plugin::SpatialPlugin,
-    spatial_access::SpatialAccess,
-    timestep::TimestepElapsed,
-};
+// #[cfg(feature = "kdtree")]
+// mod kdtree;
+// mod plugin;
+// mod resources_components;
+// #[cfg(feature = "rstar")]
+// mod rtree;
+// mod spatial_access;
 
-#[cfg(feature = "kdtree")]
-pub use self::kdtree::{KDTreeAccess2D, KDTreePlugin2D};
+// pub use self::{
+//     // common::{EntityPoint, EntityPoint2D, EntityPoint3D},
+//     plugin::SpatialPlugin,
+//     spatial_access::SpatialAccess,
+//     timestep::TimestepElapsed,
+// };
 
-#[cfg(feature = "rstar")]
-pub use self::rtree::{DefaultParams, RTreeAccess2D, RTreeAccess3D, RTreePlugin2D, RTreePlugin3D};
+// #[cfg(feature = "kdtree")]
+// pub use self::kdtree::{KDTreeAccess2D, KDTreePlugin2D};
+
+// #[cfg(feature = "rstar")]
+// pub use self::rtree::{DefaultParams, RTreeAccess2D, RTreeAccess3D, RTreePlugin2D, RTreePlugin3D};
