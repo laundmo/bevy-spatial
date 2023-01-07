@@ -21,11 +21,11 @@ impl From<BevyAabb> for Aabb<Vec3A> {
     }
 }
 
-impl From<BevyAabb> for Aabb<Vec3A> {
-    fn from(aabb: BevyAabb) -> Self {
-        Self {
-            lower: aabb.center + aabb.half_extents,
-            upper: aabb.center - aabb.half_extents,
-        }
-    }
-}
+// impl From<> for Aabb<Vec3A> {
+//     fn from(aabb: BevyAabb) -> Self {
+//         Self {
+//             lower: aabb.center + aabb.half_extents,
+//             upper: aabb.center - aabb.half_extents,
+//         }
+//     }
+// }
