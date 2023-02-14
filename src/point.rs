@@ -12,6 +12,8 @@ pub trait SpatialPoint: Copy + Clone + PartialEq + Debug {
     /// todo:
     type Unit: Unit;
 
+    type Vec;
+
     /// todo:
     const DIMENSIONS: usize;
 
@@ -32,6 +34,7 @@ macro_rules! impl_spatial_point_glam {
     ($vec:ident, $unit:ident, $dist_t:ident) => {
         impl SpatialPoint for $vec {
             type Unit = $unit;
+            type Vec = $vec;
 
             const DIMENSIONS: usize = 2;
 

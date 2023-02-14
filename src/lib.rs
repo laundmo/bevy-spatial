@@ -31,7 +31,12 @@
 // mod common;
 
 mod aabb;
+mod datacontainer;
 mod point;
+mod spatial_access;
+mod test_plugin;
+
+pub use test_plugin::TestPlugin;
 // mod timestep;
 // mod types;
 

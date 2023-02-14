@@ -2,15 +2,6 @@ use bevy::prelude::*;
 
 use crate::point::SpatialPoint;
 
-pub trait Metadata {
-    /// Get the minimum distance that a entity has to travel before being updated in the datastructure.
-    fn get_min_dist(&self) -> f32;
-    /// Get the amount of moved/changed/added entities after which to perform a full recreate.
-    fn get_recreate_after(&self) -> usize;
-    /// Get the size of the underlying datastructure. Should match the number of tracked elements.
-    fn size(&self) -> usize;
-}
-
 pub trait SpatialAccess {
     type Point: SpatialPoint;
 
