@@ -1,68 +1,118 @@
-use bevy::{
-    math::{DVec2, DVec3, Vec3A},
-    prelude::*,
-};
+use bevy::prelude::Entity;
 use num_traits::{Bounded, Num, Signed};
 use std::fmt::Debug;
-pub trait Unit: Bounded + Num + Clone + Copy + Signed + PartialOrd + Debug {}
-impl<T> Unit for T where T: Bounded + Num + Clone + Copy + Signed + PartialOrd + Debug {}
+use typenum::Unsigned;
+pub trait Scalar: Bounded + Num + Clone + Copy + Signed + PartialOrd + Debug {}
+impl<T> Scalar for T where T: Bounded + Num + Clone + Copy + Signed + PartialOrd + Debug {}
 
-// Closely inspired by, almost copied from, rstar
+// Matches closely what rstar and kdtree use
 pub trait SpatialPoint: Copy + Clone + PartialEq + Debug {
-    /// todo:
-    type Unit: Unit;
+    /// The Scalar type of a vector, example: f32, f64
+    type Scalar: Scalar;
 
+    /// The vector type itself, for example [`crate::point::SVec3`]
     type Vec;
 
-    /// todo:
-    const DIMENSIONS: usize;
+    /// The dimension of this vector, like [`typenum::U2`] [`typenum::U3`]
+    type Dimension: Unsigned;
 
-    fn create(test: &[Self::Unit]) -> Self;
-
-    /// `nth` always smaller than `Self::DIMENSIONS`.
-    fn at(&self, nth: usize) -> Self::Unit;
+    /// `nth` always smaller than [`Self::Dimension`].
+    fn at(&self, nth: usize) -> Self::Scalar;
 
     /// Get the squared distance of this point to another point of the same type.
-    fn distance_squared(&self, other: &Self) -> Self::Unit;
+    fn distance_squared(&self, other: &Self) -> Self::Scalar;
 
-    fn min_point(&self, other: &Self) -> Self;
+    /// Get the minimum between this and another point
+    fn min_point(&self, other: &Self) -> Self::Vec;
 
-    fn max_point(&self, other: &Self) -> Self;
+    /// Get the maximum between this and another point
+    fn max_point(&self, other: &Self) -> Self::Vec;
+
+    fn entity(&self) -> Option<Entity>;
+
+    fn vec(&self) -> Self::Vec;
 }
 
-macro_rules! impl_spatial_point_glam {
-    ($vec:ident, $unit:ident, $dist_t:ident) => {
-        impl SpatialPoint for $vec {
-            type Unit = $unit;
-            type Vec = $vec;
+macro_rules! impl_spatial_point {
+    ($pointname:ident, $bvec:ty, $unit:ty, $dim:ty, $diml:literal) => {
+        /// Newtype over bevy/glam vectors, needed to allow implementing foreign spatial datastructure traits.
+        #[derive(Clone, Copy, Debug, PartialEq)]
+        pub struct $pointname {
+            pub vec: $bvec,
+            pub entity: Option<Entity>,
+        }
 
-            const DIMENSIONS: usize = 2;
-
-            fn create(data: &[Self::Unit]) -> Self {
-                $vec::from_slice(data)
+        impl $pointname {
+            fn new(vec: $bvec, entity: Entity) -> Self {
+                $pointname {
+                    vec,
+                    entity: Some(entity),
+                }
             }
 
-            fn at(&self, nth: usize) -> Self::Unit {
-                self[nth]
+            fn from_vec(vec: $bvec) -> Self {
+                $pointname { vec, entity: None }
+            }
+        }
+
+        impl SpatialPoint for $pointname {
+            type Scalar = $unit;
+            type Vec = $bvec;
+            type Dimension = $dim;
+
+            #[inline]
+            fn at(&self, nth: usize) -> Self::Scalar {
+                self.vec[nth]
             }
 
-            fn distance_squared(&self, other: &Self) -> $dist_t {
-                $vec::distance_squared(*self, *other)
+            #[inline]
+            fn distance_squared(&self, other: &Self) -> Self::Scalar {
+                self.vec.distance_squared(other.vec)
             }
 
-            fn min_point(&self, other: &Self) -> Self {
-                self.min(*other)
+            #[inline]
+            fn min_point(&self, other: &Self) -> Self::Vec {
+                self.vec.min(other.vec)
             }
 
-            fn max_point(&self, other: &Self) -> Self {
-                self.max(*other)
+            #[inline]
+            fn max_point(&self, other: &Self) -> Self::Vec {
+                self.vec.max(other.vec)
+            }
+
+            #[inline]
+            fn entity(&self) -> Option<Entity> {
+                self.entity
+            }
+
+            #[inline]
+            fn vec(&self) -> Self::Vec {
+                self.vec
+            }
+        }
+
+        impl From<(Entity, $bvec)> for $pointname {
+            fn from(value: (Entity, $bvec)) -> Self {
+                $pointname::new(value.1, value.0)
+            }
+        }
+
+        impl From<($bvec, Entity)> for $pointname {
+            fn from(value: ($bvec, Entity)) -> Self {
+                $pointname::new(value.0, value.1)
+            }
+        }
+
+        impl From<$bvec> for $pointname {
+            fn from(value: $bvec) -> Self {
+                $pointname::from_vec(value)
             }
         }
     };
 }
 
-impl_spatial_point_glam!(Vec2, f32, f32);
-impl_spatial_point_glam!(Vec3, f32, f32);
-impl_spatial_point_glam!(Vec3A, f32, f32);
-impl_spatial_point_glam!(DVec2, f64, f64);
-impl_spatial_point_glam!(DVec3, f64, f64);
+impl_spatial_point!(Point2, bevy::math::Vec2, f32, typenum::consts::U2, 2);
+impl_spatial_point!(Point3, bevy::math::Vec3, f32, typenum::consts::U3, 3);
+impl_spatial_point!(Point3A, bevy::math::Vec3A, f32, typenum::consts::U3, 3);
+impl_spatial_point!(PointD2, bevy::math::DVec2, f64, typenum::consts::U2, 2);
+impl_spatial_point!(PointD3, bevy::math::DVec3, f64, typenum::consts::U3, 3);

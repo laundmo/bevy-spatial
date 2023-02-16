@@ -30,7 +30,7 @@
 
 // mod common;
 
-mod aabb;
+// mod aabb;
 mod datacontainer;
 mod point;
 mod spatial_access;
@@ -40,8 +40,8 @@ pub use test_plugin::TestPlugin;
 // mod timestep;
 // mod types;
 
-// #[cfg(feature = "kdtree")]
-// mod kdtree;
+#[cfg(feature = "kdtree")]
+mod kdtree;
 // mod plugin;
 // mod resources_components;
 // #[cfg(feature = "rstar")]

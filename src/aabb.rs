@@ -1,7 +1,6 @@
-use bevy::math::Vec3A;
 use bevy::render::primitives::Aabb as BevyAabb;
 
-use crate::point::SpatialPoint;
+use crate::point::{SVec3A, SpatialPoint};
 
 #[derive(Clone, Debug, Copy, PartialEq, Eq, Ord, PartialOrd)]
 pub struct Aabb<P>
@@ -12,20 +11,11 @@ where
     upper: P,
 }
 
-impl From<BevyAabb> for Aabb<Vec3A> {
+impl From<BevyAabb> for Aabb<SVec3A> {
     fn from(aabb: BevyAabb) -> Self {
         Self {
-            lower: aabb.center + aabb.half_extents,
-            upper: aabb.center - aabb.half_extents,
+            lower: SVec3A(aabb.center + aabb.half_extents),
+            upper: SVec3A(aabb.center - aabb.half_extents),
         }
     }
 }
-
-// impl From<> for Aabb<Vec3A> {
-//     fn from(aabb: BevyAabb) -> Self {
-//         Self {
-//             lower: aabb.center + aabb.half_extents,
-//             upper: aabb.center - aabb.half_extents,
-//         }
-//     }
-// }

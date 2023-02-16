@@ -1,6 +1,6 @@
 use bevy::{math::Vec3A, prelude::*};
 
-use crate::datacontainer::SpatialData;
+use crate::{datacontainer::SpatialData, point::Point3A};
 
 pub struct TestPlugin;
 
@@ -9,7 +9,7 @@ struct SpatialComponent;
 
 impl Plugin for TestPlugin {
     fn build(&self, app: &mut App) {
-        app.insert_resource(SpatialData::<Vec3A, SpatialComponent>::new())
+        app.insert_resource(SpatialData::<Point3A, SpatialComponent>::new())
             .add_system(extract_all);
         // .add_system(log);
     }
@@ -17,7 +17,7 @@ impl Plugin for TestPlugin {
 
 fn extract_all(
     data: Query<(Entity, &GlobalTransform)>,
-    mut sd: ResMut<SpatialData<Vec3A, SpatialComponent>>,
+    mut sd: ResMut<SpatialData<Point3A, SpatialComponent>>,
 ) {
     data.iter()
         .for_each(|(e, p)| sd.add_changed(e, p.translation_vec3a()));

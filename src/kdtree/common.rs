@@ -1,31 +1,33 @@
 use std::marker::PhantomData;
 
-use bevy::prelude::Resource;
-use kd_tree::{KdPoint, KdTree};
-
-use crate::plugin::SpatialPlugin;
+use crate::point::SpatialPoint;
+use bevy::prelude::{Resource, Vec3};
+use kd_tree::{KdPoint, KdTree as BaseKdTree};
 
 #[derive(Resource)]
-pub struct KDTreeAccess<TComp, KDItem>
+pub struct KDTree<TComp, KDItem>
 where
     KDItem: KdPoint,
 {
-    pub tree: KdTree<KDItem>,
+    pub tree: BaseKdTree<KDItem>,
     pub component_type: PhantomData<TComp>,
 }
 
-impl<TComp, KDItem> From<SpatialPlugin<TComp, KDTreeAccess<TComp, KDItem>>>
-    for KDTreeAccess<TComp, KDItem>
-where
-    KDItem: KdPoint,
-    <KDItem as KdPoint>::Scalar: num_traits::Float,
-{
-    fn from(_: SpatialPlugin<TComp, KDTreeAccess<TComp, KDItem>>) -> Self {
-        let tree: KdTree<KDItem> = KdTree::<KDItem>::build_by_ordered_float(vec![]);
+macro_rules! kdtree_impl {
+    ($pt:ty) => {
+        impl KdPoint for $pt {
+            type Scalar = <$pt as SpatialPoint>::Scalar;
 
-        KDTreeAccess {
-            tree,
-            component_type: PhantomData,
+            type Dim = <$pt as SpatialPoint>::Dimension;
+
+            fn at(&self, i: usize) -> Self::Scalar {
+                <Self as SpatialPoint>::at(self, i)
+            }
         }
-    }
+    };
 }
+kdtree_impl!(crate::point::Point2);
+kdtree_impl!(crate::point::Point3);
+kdtree_impl!(crate::point::Point3A);
+kdtree_impl!(crate::point::PointD2);
+kdtree_impl!(crate::point::PointD3);

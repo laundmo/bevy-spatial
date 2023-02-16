@@ -10,16 +10,16 @@ impl<T> TComp for T where T: Component + Send + Sync + 'static {}
 
 #[derive(Resource, Debug)]
 pub struct SpatialData<T: SpatialPoint + 'static, Comp: TComp> {
-    all: SparseSet<Entity, T>,
-    changed: Vec<Entity>,
-    removed: Vec<Entity>,
-    rebuild_full: bool,
+    pub(crate) all: SparseSet<Entity, T>,
+    pub(crate) changed: Vec<Entity>,
+    pub(crate) removed: Vec<Entity>,
+    pub(crate) rebuild_full: bool,
     pd: PhantomData<Comp>,
 }
 
 impl<T, Comp> SpatialData<T, Comp>
 where
-    T: SpatialPoint,
+    T: SpatialPoint + From<(Entity, <T as SpatialPoint>::Vec)>,
     Comp: TComp,
 {
     pub fn new() -> Self {
@@ -34,7 +34,8 @@ where
     }
 
     // Added as well as Moved
-    pub fn add_changed(&mut self, entity: Entity, point: T) {
+    pub fn add_changed(&mut self, entity: Entity, vec: T::Vec) {
+        let point: T = (entity, vec).into();
         let p = self.all.get_or_insert_with(entity, || {
             self.changed.push(entity);
             point
