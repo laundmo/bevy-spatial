@@ -36,7 +36,7 @@ pub trait SpatialPoint: Copy + Clone + PartialEq + Debug {
 macro_rules! impl_spatial_point {
     ($pointname:ident, $bvec:ty, $unit:ty, $dim:ty, $diml:literal) => {
         /// Newtype over bevy/glam vectors, needed to allow implementing foreign spatial datastructure traits.
-        #[derive(Clone, Copy, Debug, PartialEq)]
+        #[derive(Clone, Copy, Debug, Default, PartialEq)]
         pub struct $pointname {
             pub vec: $bvec,
             pub entity: Option<Entity>,

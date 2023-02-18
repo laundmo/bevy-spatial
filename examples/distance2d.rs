@@ -3,10 +3,10 @@ use bevy::{
     math::Vec3Swizzles,
     prelude::*,
 };
-use bevy_spatial::{KDTreeAccess2D, KDTreePlugin2D, SpatialAccess};
-
+use bevy_spatial::SpatialAccess;
+use bevy_spatial::{KDTree3A, KDTreePlugin3A, TestPlugin};
 // marker for entities tracked by the KDTree
-#[derive(Component)]
+#[derive(Component, Default)]
 struct NearestNeighbourComponent;
 
 // marker for the "cursor" entity
@@ -17,7 +17,8 @@ fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         // Add the plugin, which takes the tracked component as a generic.
-        .add_plugin(KDTreePlugin2D::<NearestNeighbourComponent> { ..default() })
+        .add_plugin(TestPlugin::<NearestNeighbourComponent>::default())
+        .add_plugin(KDTreePlugin3A::<NearestNeighbourComponent>::default())
         .add_plugin(LogDiagnosticsPlugin::default())
         .add_plugin(FrameTimeDiagnosticsPlugin::default())
         .add_startup_system(setup)
@@ -30,10 +31,10 @@ fn main() {
 }
 
 // type alias for easier usage later
-type NNTree = KDTreeAccess2D<NearestNeighbourComponent>;
+type NNTree = KDTree3A<NearestNeighbourComponent>;
 
 fn setup(mut commands: Commands) {
-    commands.spawn_bundle(Camera2dBundle::default());
+    commands.spawn(Camera2dBundle::default());
     commands.spawn((
         Cursor,
         SpriteBundle {
@@ -84,11 +85,11 @@ fn mouse(
         pos.x -= win.width() / 2.0;
         pos.y -= win.height() / 2.0;
         let mut transform = query.single_mut();
-        if let Some((_pos, entity)) = treeaccess.nearest_neighbour(pos.extend(0.0)) {
+        if let Some((_pos, entity)) = treeaccess.nearest_neighbour(pos.extend(0.0).into()) {
             if use_mouse {
                 transform.translation = pos.extend(1.0); // I don't really know what this is here for
             } else {
-                commands.entity(entity).despawn();
+                commands.entity(entity.unwrap()).despawn();
             }
         }
     }
@@ -104,8 +105,8 @@ fn color(
         pos.x -= win.width() / 2.0;
         pos.y -= win.height() / 2.0;
 
-        for (_, entity) in treeaccess.within_distance(pos.extend(0.0), 50.0) {
-            if let Ok(mut sprite) = query.get_mut(entity) {
+        for (_, entity) in treeaccess.within_distance(pos.extend(0.0).into(), 50.0) {
+            if let Ok(mut sprite) = query.get_mut(entity.unwrap()) {
                 sprite.color = Color::BLACK;
             }
         }

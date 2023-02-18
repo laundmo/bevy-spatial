@@ -1,26 +1,37 @@
+use std::marker::PhantomData;
+
 use bevy::{math::Vec3A, prelude::*};
 
-use crate::{datacontainer::SpatialData, point::Point3A};
+use crate::{
+    datacontainer::{SpatialData, TComp},
+    point::Point3A,
+    SpatialUpdate,
+};
 
-pub struct TestPlugin;
+#[derive(Default)]
+pub struct TestPlugin<Comp>(PhantomData<Comp>);
 
-#[derive(Component, Debug)]
-struct SpatialComponent;
-
-impl Plugin for TestPlugin {
+impl<Comp: TComp> Plugin for TestPlugin<Comp> {
     fn build(&self, app: &mut App) {
-        app.insert_resource(SpatialData::<Point3A, SpatialComponent>::new())
-            .add_system(extract_all);
+        app.init_resource::<SpatialData<Point3A, Comp>>()
+            .add_system_to_stage(
+                CoreStage::PostUpdate,
+                extract_all::<Comp>
+                    .label(SpatialUpdate::ExtractCoordinates)
+                    .before(SpatialUpdate::UpdateSpatial),
+            );
         // .add_system(log);
     }
 }
 
-fn extract_all(
+fn extract_all<Comp: TComp>(
     data: Query<(Entity, &GlobalTransform)>,
-    mut sd: ResMut<SpatialData<Point3A, SpatialComponent>>,
+    mut sd: ResMut<SpatialData<Point3A, Comp>>,
 ) {
-    data.iter()
-        .for_each(|(e, p)| sd.add_changed(e, p.translation_vec3a()));
+    sd.set_all(
+        data.iter()
+            .map(|(e, p)| (e, (e, p.translation_vec3a()).into())),
+    );
 }
 
 // fn log(sd: Res<SpatialData<Vec3A, SpatialComponent>>) {

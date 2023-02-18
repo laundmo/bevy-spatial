@@ -34,6 +34,7 @@
 mod datacontainer;
 mod point;
 mod spatial_access;
+pub use self::spatial_access::SpatialAccess;
 mod test_plugin;
 
 pub use test_plugin::TestPlugin;
@@ -42,6 +43,10 @@ pub use test_plugin::TestPlugin;
 
 #[cfg(feature = "kdtree")]
 mod kdtree;
+
+#[cfg(feature = "kdtree")]
+pub use self::kdtree::*;
+
 // mod plugin;
 // mod resources_components;
 // #[cfg(feature = "rstar")]
@@ -55,8 +60,11 @@ mod kdtree;
 //     timestep::TimestepElapsed,
 // };
 
-// #[cfg(feature = "kdtree")]
-// pub use self::kdtree::{KDTreeAccess2D, KDTreePlugin2D};
-
 // #[cfg(feature = "rstar")]
 // pub use self::rtree::{DefaultParams, RTreeAccess2D, RTreeAccess3D, RTreePlugin2D, RTreePlugin3D};
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, bevy::prelude::SystemLabel)]
+pub enum SpatialUpdate {
+    ExtractCoordinates,
+    UpdateSpatial,
+}

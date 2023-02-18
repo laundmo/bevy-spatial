@@ -17,6 +17,16 @@ pub struct SpatialData<T: SpatialPoint + 'static, Comp: TComp> {
     pd: PhantomData<Comp>,
 }
 
+impl<T, Comp> Default for SpatialData<T, Comp>
+where
+    T: SpatialPoint + From<(Entity, <T as SpatialPoint>::Vec)>,
+    Comp: TComp,
+{
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<T, Comp> SpatialData<T, Comp>
 where
     T: SpatialPoint + From<(Entity, <T as SpatialPoint>::Vec)>,
@@ -27,7 +37,6 @@ where
             all: SparseSet::new(),
             changed: Vec::new(),
             removed: Vec::new(),
-            // data,
             rebuild_full: false,
             pd: PhantomData,
         }

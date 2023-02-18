@@ -5,18 +5,18 @@ use crate::{
     point::SpatialPoint,
 };
 
-trait UpdateSpatialAccess: SpatialAccess {
+pub trait UpdateSpatialAccess: SpatialAccess {
     /// Rebuilds the underlying datastructure fully
     fn rebuild(&mut self, data: &SpatialData<Self::Point, Self::Comp>) {
         self.clear();
-        for (e, p) in data.all.iter() {
-            self.add(*p, *e);
+        for p in data.all.values() {
+            self.add(*p);
         }
     }
     /// Adds the point to the underlying datastructure.
-    fn add(&mut self, point: Self::Point, entity: Entity);
+    fn add(&mut self, point: Self::Point);
     /// Remove the point by coordinate + entity from the underlying datastructure.
-    fn remove_point(&mut self, point: Self::Point, entity: Entity) -> bool;
+    fn remove_point(&mut self, point: Self::Point) -> bool;
     /// Remove the point by entity from the underlying datastructure.
     fn remove_entity(&mut self, entity: Entity) -> bool;
     /// Clear the underlying datastructure, removing all points it contains.
@@ -47,7 +47,7 @@ pub trait SpatialAccess {
         distance: <Self::Point as SpatialPoint>::Scalar,
     ) -> Self::ResultT;
     /// Recreate the underlying datastructure with `all` points.
-    fn update(&mut self, all: &SpatialData<Self::Point, Self::Comp>);
+    fn update(&mut self, all: &mut SpatialData<Self::Point, Self::Comp>);
 }
 
 // TODO: SpatialAABBAccess trait definition - should it be separate from SpatialAccess or depend on it?
