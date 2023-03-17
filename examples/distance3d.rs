@@ -1,6 +1,7 @@
 use bevy::{
     diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
     prelude::*,
+    window::PrimaryWindow,
 };
 use bevy_spatial::{RTreeAccess3D, RTreePlugin3D, SpatialAccess};
 
@@ -80,8 +81,11 @@ fn setup(
     }
 }
 
-fn mouse(windows: Res<Windows>, mut query: Query<&mut Transform, With<Cursor>>) {
-    let win = windows.get_primary().unwrap();
+fn mouse(
+    window_query: Query<&Window, With<PrimaryWindow>>,
+    mut query: Query<&mut Transform, With<Cursor>>,
+) {
+    let win = window_query.get_single().unwrap();
     if let Some(mut pos) = win.cursor_position() {
         pos.x -= win.width() / 2.0;
         pos.y -= win.height() / 2.0;
@@ -91,12 +95,12 @@ fn mouse(windows: Res<Windows>, mut query: Query<&mut Transform, With<Cursor>>) 
 }
 
 fn color(
-    windows: Res<Windows>,
+    window_query: Query<&Window, With<PrimaryWindow>>,
     treeaccess: Res<NNTree>,
     mut query: Query<&mut Handle<StandardMaterial>, With<NearestNeighbourComponent>>,
     colors: Res<MaterialHandles>,
 ) {
-    let win = windows.get_primary().unwrap();
+    let win = window_query.get_single().unwrap();
     if let Some(mut pos) = win.cursor_position() {
         pos.x -= win.width() / 2.0;
         pos.y -= win.height() / 2.0;

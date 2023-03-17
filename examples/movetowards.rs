@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, window::PrimaryWindow};
 use bevy_spatial::{DefaultParams, RTreeAccess2D, RTreePlugin2D, SpatialAccess};
 
 #[derive(Component)]
@@ -42,8 +42,12 @@ fn setup(mut commands: Commands) {
     }
 }
 
-fn mouseclick(mut commands: Commands, mouse_input: Res<Input<MouseButton>>, windows: Res<Windows>) {
-    let win = windows.get_primary().unwrap();
+fn mouseclick(
+    mut commands: Commands,
+    mouse_input: Res<Input<MouseButton>>,
+    window_query: Query<&Window, With<PrimaryWindow>>,
+) {
+    let win = window_query.get_single().unwrap();
     if mouse_input.just_pressed(MouseButton::Left) {
         if let Some(mut pos) = win.cursor_position() {
             pos.x -= win.width() / 2.0;

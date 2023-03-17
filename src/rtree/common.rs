@@ -4,7 +4,7 @@ use bevy::prelude::{Entity, Resource, Vec3};
 use bevy::utils::HashMap;
 use rstar::{RTree, RTreeObject, RTreeParams};
 
-use crate::{common::EntityPoint, plugin::SpatialPlugin, SpatialAccess};
+use crate::plugin::SpatialPlugin;
 
 #[derive(Resource)]
 pub struct RTreeAccess<TComp, RObj, Params>

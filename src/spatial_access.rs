@@ -3,8 +3,6 @@ use bevy::{
     prelude::*,
 };
 
-use crate::resources_components::MovementTracked;
-
 #[derive(WorldQuery)]
 #[world_query(mutable)]
 pub struct TrackedQuery<'a, TComp>
@@ -13,8 +11,8 @@ where
 {
     pub entity: Entity,
     pub transform: &'a Transform,
-    pub change_tracker: ChangeTrackers<Transform>,
-    pub added_tracker: ChangeTrackers<TComp>,
+    pub change_tracker: Ref<'a, Transform>,
+    pub added_tracker: Ref<'a, TComp>,
 }
 
 pub trait SpatialAccess
@@ -93,7 +91,7 @@ where
     }
 
     /// Delete despawned entities from datastructure. Used internally and called from a system.
-    fn delete(&mut self, removed: RemovedComponents<Self::TComp>) {
+    fn delete(&mut self, mut removed: RemovedComponents<Self::TComp>) {
         for entity in removed.iter() {
             self.remove_entity(entity);
         }

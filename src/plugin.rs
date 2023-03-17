@@ -1,12 +1,10 @@
-use std::marker::PhantomData;
+use std::{marker::PhantomData, time::Duration};
 
-use bevy::prelude::*;
+use bevy::{prelude::*, time::common_conditions::on_timer};
 
 use crate::{
-    common::run_if_elapsed,
-    resources_components::TimestepElapsed,
     spatial_access::{delete, update_tree},
-    SpatialAccess,
+    SpatialAccess, TimestepElapsed,
 };
 
 /// The core plugin struct which stores metadata for updating and recreating the choosen spatial index.
@@ -64,8 +62,8 @@ where
         let tree_access = Access::from(*self);
 
         app.insert_resource(tree_access)
-            .add_startup_system_to_stage(StartupStage::PostStartup, update_tree::<Access>)
-            .add_system_to_stage(CoreStage::PostUpdate, delete::<Access>);
+            .add_startup_system(update_tree::<Access>.in_base_set(StartupSet::PostStartup))
+            .add_system(delete::<Access>.in_base_set(CoreSet::PostUpdate));
 
         // decide whether to use the timestep
         if let Some(step) = self.timestep {
@@ -73,14 +71,15 @@ where
                 Timer::from_seconds(step, TimerMode::Once),
                 PhantomData,
             ));
-            app.add_system_set_to_stage(
-                CoreStage::PostUpdate,
-                SystemSet::new()
-                    .with_run_criteria(run_if_elapsed::<TComp>)
-                    .with_system(update_tree::<Access>),
+
+            let duration = Duration::from_secs_f32(step);
+            app.add_system(
+                update_tree::<Access>
+                    .in_base_set(CoreSet::PostUpdate)
+                    .run_if(on_timer(duration)),
             );
         } else {
-            app.add_system_to_stage(CoreStage::PostUpdate, update_tree::<Access>);
+            app.add_system(update_tree::<Access>.in_base_set(CoreSet::PostUpdate));
         }
     }
 }

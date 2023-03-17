@@ -2,6 +2,7 @@ use bevy::{
     diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
     math::Vec3Swizzles,
     prelude::*,
+    window::PrimaryWindow,
 };
 use bevy_spatial::{KDTreeAccess2D, KDTreePlugin2D, SpatialAccess};
 
@@ -33,7 +34,7 @@ fn main() {
 type NNTree = KDTreeAccess2D<NearestNeighbourComponent>;
 
 fn setup(mut commands: Commands) {
-    commands.spawn_bundle(Camera2dBundle::default());
+    commands.spawn(Camera2dBundle::default());
     commands.spawn((
         Cursor,
         SpriteBundle {
@@ -73,13 +74,13 @@ fn setup(mut commands: Commands) {
 
 fn mouse(
     mut commands: Commands,
-    windows: Res<Windows>,
+    window_query: Query<&Window, With<PrimaryWindow>>,
     treeaccess: Res<NNTree>,
     mut query: Query<&mut Transform, With<Cursor>>,
     ms_buttons: Res<Input<MouseButton>>,
 ) {
     let use_mouse = ms_buttons.pressed(MouseButton::Left);
-    let win = windows.get_primary().unwrap();
+    let win = window_query.get_single().unwrap();
     if let Some(mut pos) = win.cursor_position() {
         pos.x -= win.width() / 2.0;
         pos.y -= win.height() / 2.0;
@@ -95,11 +96,11 @@ fn mouse(
 }
 
 fn color(
-    windows: Res<Windows>,
+    window_query: Query<&Window, With<PrimaryWindow>>,
     treeaccess: Res<NNTree>,
     mut query: Query<&mut Sprite, With<NearestNeighbourComponent>>,
 ) {
-    let win = windows.get_primary().unwrap();
+    let win = window_query.get_single().unwrap();
     if let Some(mut pos) = win.cursor_position() {
         pos.x -= win.width() / 2.0;
         pos.y -= win.height() / 2.0;
@@ -126,10 +127,10 @@ fn movement(mut query: Query<&mut Transform, With<NearestNeighbourComponent>>) {
 }
 
 fn collide_wall(
-    windows: Res<Windows>,
+    window_query: Query<&Window, With<PrimaryWindow>>,
     mut query: Query<&mut Transform, With<NearestNeighbourComponent>>,
 ) {
-    let win = windows.get_primary().unwrap();
+    let win = window_query.get_single().unwrap();
 
     let w = win.width() / 2.0;
     let h = win.height() / 2.0;

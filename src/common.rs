@@ -1,19 +1,17 @@
-use bevy::{ecs::schedule::ShouldRun, prelude::*};
+use bevy::prelude::*;
 
 use crate::resources_components::TimestepElapsed;
 
-pub fn run_if_elapsed<TComp>(
-    mut elapsed: ResMut<TimestepElapsed<TComp>>,
-    time: Res<Time>,
-) -> ShouldRun
+// TODO: I can't get this to work
+pub fn run_if_elapsed<TComp>(mut elapsed: ResMut<TimestepElapsed<TComp>>, time: Res<Time>) -> bool
 where
     TComp: Component,
 {
-    if elapsed.tick(time.delta()).finished() {
+    if elapsed.tick(time.delta()).just_finished() {
         elapsed.reset();
-        ShouldRun::Yes
+        true
     } else {
-        ShouldRun::No
+        false
     }
 }
 

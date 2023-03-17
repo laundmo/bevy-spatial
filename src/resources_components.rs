@@ -5,22 +5,6 @@ use std::{
 
 use bevy::prelude::*;
 
-/// Internal component which tracks the last position at which the entity was updated in the tree.
-#[derive(Component)]
-pub struct MovementTracked<T> {
-    pub lastpos: Vec3,
-    pub component_type: PhantomData<T>,
-}
-
-impl<T> MovementTracked<T> {
-    pub fn new(last: Vec3) -> Self {
-        MovementTracked {
-            lastpos: last,
-            component_type: PhantomData,
-        }
-    }
-}
-
 /// Resource used for fixed timestep without repeats in the same frame (builtin timestep may run the system multiple times per frame).
 ///
 /// To modify the timestep at runtime, a system like this can be used:
