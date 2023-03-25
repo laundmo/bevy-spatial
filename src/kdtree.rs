@@ -2,10 +2,9 @@ use bevy::prelude::*;
 use kd_tree::{KdPoint, KdTree as BaseKdTree, KdTreeN};
 
 use crate::{
-    datacontainer::{SpatialData, TComp},
-    point::SpatialPoint,
+    point::{SpatialPoint, SpatialTracker},
     spatial_access::{SpatialAccess, UpdateSpatialAccess},
-    SpatialUpdate,
+    TComp,
 };
 
 use std::marker::PhantomData;
@@ -25,31 +24,14 @@ macro_rules! kdtree_impl {
         }
 
         #[derive(Resource, Default)]
-        pub struct $treename<TComp> {
+        pub struct $treename<Comp> {
             pub tree: BaseKdTree<$pt>,
-            pub component_type: PhantomData<TComp>,
+            pub component_type: PhantomData<Comp>,
         }
 
         #[derive(Default)]
         pub struct $pluginname<Comp> {
             tcomp: PhantomData<Comp>,
-        }
-
-        impl<Comp> Plugin for $pluginname<Comp>
-        where
-            Comp: TComp + Default,
-        {
-            fn build(&self, app: &mut App) {
-                app.init_resource::<$treename<Comp>>().add_system_to_stage(
-                    CoreStage::PostUpdate,
-                    (|mut spatial_data: ResMut<SpatialData<$pt, Comp>>,
-                      mut kdtree: ResMut<$treename<Comp>>| {
-                        kdtree.update(&mut spatial_data)
-                    })
-                    .label(SpatialUpdate::UpdateSpatial)
-                    .after(SpatialUpdate::ExtractCoordinates),
-                );
-            }
         }
 
         impl<Comp> SpatialAccess for $treename<Comp>
@@ -111,18 +93,10 @@ macro_rules! kdtree_impl {
                         .collect()
                 }
             }
-
-            fn update(&mut self, data: &mut SpatialData<Self::Point, Self::Comp>) {
-                self.rebuild(data); // always rebuild
-                data.changed.clear();
-                data.removed.clear();
-                data.rebuild_full = false;
-            }
         }
         impl<Comp: TComp> UpdateSpatialAccess for $treename<Comp> {
-            fn rebuild(&mut self, data: &SpatialData<Self::Point, Self::Comp>) {
-                let v: Vec<$pt> = data.all.values().copied().collect();
-                self.tree = KdTreeN::build_by_ordered_float(v);
+            fn rebuild(&mut self, data: impl Iterator<Item = Self::Point>) {
+                self.tree = KdTreeN::build_by_ordered_float(data.collect::<Vec<_>>());
             }
 
             fn add(&mut self, _: Self::Point) {}
@@ -144,3 +118,15 @@ kdtree_impl!(crate::point::Point3, KDTree3, KDTreePlugin3);
 kdtree_impl!(crate::point::Point3A, KDTree3A, KDTreePlugin3A);
 kdtree_impl!(crate::point::PointD2, KDTreeD2, KDTreePluginD2);
 kdtree_impl!(crate::point::PointD3, KDTreeD3, KDTreePluginD3);
+
+impl<Comp: TComp> Plugin for KDTreePlugin2<Comp> {
+    fn build(&self, app: &mut App) {
+        fn update<Comp: TComp>(
+            tree: Res<KDTree2<Comp>>,
+            query: Query<&SpatialTracker<crate::point::Point2, Comp>>,
+        ) {
+            tree.rebuild(query.iter().map(|i| i.point));
+        }
+        app.add_system(update)
+    }
+}

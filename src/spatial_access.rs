@@ -1,16 +1,14 @@
 use bevy::prelude::*;
 
-use crate::{
-    datacontainer::{SpatialData, TComp},
-    point::SpatialPoint,
-};
+use crate::{point::SpatialPoint, TComp};
 
+// todo: change Point to impl IntoPoint?
 pub trait UpdateSpatialAccess: SpatialAccess {
     /// Rebuilds the underlying datastructure fully
-    fn rebuild(&mut self, data: &SpatialData<Self::Point, Self::Comp>) {
+    fn rebuild(&mut self, data: impl Iterator<Item = Self::Point>) {
         self.clear();
-        for p in data.all.values() {
-            self.add(*p);
+        for p in data {
+            self.add(p);
         }
     }
     /// Adds the point to the underlying datastructure.
@@ -46,8 +44,6 @@ pub trait SpatialAccess {
         loc: <Self::Point as SpatialPoint>::Vec,
         distance: <Self::Point as SpatialPoint>::Scalar,
     ) -> Self::ResultT;
-    /// Recreate the underlying datastructure with `all` points.
-    fn update(&mut self, all: &mut SpatialData<Self::Point, Self::Comp>);
 }
 
 // TODO: SpatialAABBAccess trait definition - should it be separate from SpatialAccess or depend on it?

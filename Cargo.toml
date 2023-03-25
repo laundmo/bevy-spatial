@@ -11,30 +11,29 @@ readme = "README.md"
 authors = ["laundmo"]
 
 [dependencies]
-bevy = { version = "0.9", default-features = false }
+bevy = { version = "0.10", default-features = false }
 # R*-Tree dependencies
-rstar = { version = "0.9.3", optional = true }
+rstar = { version = "0.10", optional = true }
 # KD-Tree dependencies
-kd-tree = { version = "0.4.1", optional = true, features = ["rayon"] }
+kd-tree = { version = "0.5.1", optional = true, features = ["rayon"] }
 typenum = { version = "1.15.0" }
 num-traits = { version = "0.2.15" }
 
 
 [features]
-default = []
+default = ["kdtree"]
 rstar = ["dep:rstar"]
 kdtree = ["dep:kd-tree"]
 
 [dev-dependencies]
-bevy = { version = "0.9" }
+bevy = { version = "0.10" }
 criterion = { version = "0.4.0", features = ["real_blackbox", "html_reports"] }
 rand = "0.8.5"
-# bevy-aabb-instancing = "0.3.0"
-wasm-server-runner = "0.3.0"
+wasm-server-runner = "0.4.0"
 
 # without the rayon feature 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-kd-tree = { version = "0.4.1", optional = true }
+kd-tree = { version = "0.5.1", optional = true }
 
 [profile.dev]
 opt-level = 1

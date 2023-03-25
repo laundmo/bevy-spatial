@@ -26,7 +26,7 @@ fn main() {
         .add_system(color)
         .add_system(reset_color.before(color))
         .add_system(collide_wall)
-        .add_system(movement)
+        .add_system(movement.run_if(condition))
         .run();
 }
 

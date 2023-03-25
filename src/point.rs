@@ -1,7 +1,9 @@
-use bevy::prelude::Entity;
+use bevy::prelude::{Component, Entity};
 use num_traits::{Bounded, Num, Signed};
-use std::fmt::Debug;
+use std::{fmt::Debug, marker::PhantomData};
 use typenum::Unsigned;
+
+use crate::TComp;
 pub trait Scalar: Bounded + Num + Clone + Copy + Signed + PartialOrd + Debug {}
 impl<T> Scalar for T where T: Bounded + Num + Clone + Copy + Signed + PartialOrd + Debug {}
 
@@ -116,3 +118,9 @@ impl_spatial_point!(Point3, bevy::math::Vec3, f32, typenum::consts::U3, 3);
 impl_spatial_point!(Point3A, bevy::math::Vec3A, f32, typenum::consts::U3, 3);
 impl_spatial_point!(PointD2, bevy::math::DVec2, f64, typenum::consts::U2, 2);
 impl_spatial_point!(PointD3, bevy::math::DVec3, f64, typenum::consts::U3, 3);
+
+#[derive(Copy, Clone, Debug, Component)]
+pub struct SpatialTracker<Comp: TComp, P: SpatialPoint> {
+    c: PhantomData<Comp>,
+    point: P,
+}

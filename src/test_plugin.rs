@@ -14,7 +14,7 @@ pub struct TestPlugin<Comp>(PhantomData<Comp>);
 impl<Comp: TComp> Plugin for TestPlugin<Comp> {
     fn build(&self, app: &mut App) {
         app.init_resource::<SpatialData<Point3A, Comp>>()
-            .add_system_to_stage(
+            .add_system_to_set(
                 CoreStage::PostUpdate,
                 extract_all::<Comp>
                     .label(SpatialUpdate::ExtractCoordinates)

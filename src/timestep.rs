@@ -4,7 +4,6 @@ use std::{
 };
 
 use bevy::{
-    ecs::schedule::ShouldRun,
     prelude::{Component, Res, ResMut, Resource},
     time::{Time, Timer},
 };
@@ -39,17 +38,10 @@ impl<TComp> DerefMut for TimestepElapsed<TComp> {
     }
 }
 
-pub fn run_if_elapsed<TComp>(
-    mut elapsed: ResMut<TimestepElapsed<TComp>>,
-    time: Res<Time>,
-) -> ShouldRun
+pub fn on_timer_changeable<TRes>(mut elapsed: ResMut<TRes>, time: Res<Time>) -> bool
 where
-    TComp: Component,
+    TRes: Deref<Target = Timer> + DerefMut<Target = Timer> + Resource,
 {
-    if elapsed.tick(time.delta()).finished() {
-        elapsed.reset();
-        ShouldRun::Yes
-    } else {
-        ShouldRun::No
-    }
+    elapsed.tick(time.delta());
+    elapsed.just_finished()
 }

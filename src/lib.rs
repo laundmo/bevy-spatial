@@ -28,26 +28,22 @@
 //!
 //! For more details see [Examples](https://github.com/laundmo/bevy-spatial/tree/main/examples)
 
-// mod common;
-
 // mod aabb;
-mod datacontainer;
+// mod datacontainer;
 mod point;
 mod spatial_access;
 pub use self::spatial_access::SpatialAccess;
-mod test_plugin;
+// mod test_plugin;
 
-pub use test_plugin::TestPlugin;
-// mod timestep;
+use bevy::prelude::Component;
+// pub use test_plugin::TestPlugin;
+mod timestep;
 // mod types;
 
-#[cfg(feature = "kdtree")]
 mod kdtree;
-
-#[cfg(feature = "kdtree")]
 pub use self::kdtree::*;
 
-// mod plugin;
+mod plugin;
 // mod resources_components;
 // #[cfg(feature = "rstar")]
 // mod rtree;
@@ -63,8 +59,6 @@ pub use self::kdtree::*;
 // #[cfg(feature = "rstar")]
 // pub use self::rtree::{DefaultParams, RTreeAccess2D, RTreeAccess3D, RTreePlugin2D, RTreePlugin3D};
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, bevy::prelude::SystemLabel)]
-pub enum SpatialUpdate {
-    ExtractCoordinates,
-    UpdateSpatial,
-}
+// Trait bound aliases
+pub trait TComp: Component + Default + Send + Sync + 'static {}
+impl<T> TComp for T where T: Component + Default + Send + Sync + 'static {}
