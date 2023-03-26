@@ -35,6 +35,19 @@ pub trait SpatialPoint: Copy + Clone + PartialEq + Debug {
     fn vec(&self) -> Self::Vec;
 }
 
+pub trait IntoSpatialPoint
+where
+    Self: Sized + Copy,
+{
+    type Point: SpatialPoint + From<(Entity, Self)> + Copy;
+    fn into_spatial_point(self, e: Entity) -> Self::Point
+    where
+        Self::Point: From<(Entity, Self)>,
+    {
+        (e, self).into()
+    }
+}
+
 macro_rules! impl_spatial_point {
     ($pointname:ident, $bvec:ty, $unit:ty, $dim:ty, $diml:literal) => {
         /// Newtype over bevy/glam vectors, needed to allow implementing foreign spatial datastructure traits.
@@ -110,6 +123,10 @@ macro_rules! impl_spatial_point {
                 $pointname::from_vec(value)
             }
         }
+
+        impl IntoSpatialPoint for $bvec {
+            type Point = $pointname;
+        }
     };
 }
 
@@ -120,7 +137,7 @@ impl_spatial_point!(PointD2, bevy::math::DVec2, f64, typenum::consts::U2, 2);
 impl_spatial_point!(PointD3, bevy::math::DVec3, f64, typenum::consts::U3, 3);
 
 #[derive(Copy, Clone, Debug, Component)]
-pub struct SpatialTracker<Comp: TComp, P: SpatialPoint> {
+pub struct SpatialTracker<Comp: TComp, P: IntoSpatialPoint> {
     c: PhantomData<Comp>,
-    point: P,
+    pub coord: P,
 }

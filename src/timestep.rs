@@ -1,12 +1,15 @@
 use std::{
     marker::PhantomData,
     ops::{Deref, DerefMut},
+    time::Duration,
 };
 
 use bevy::{
-    prelude::{Component, Res, ResMut, Resource},
-    time::{Time, Timer},
+    prelude::{Component, Local, Res, ResMut, Resource},
+    time::{Time, Timer, TimerMode},
 };
+
+use crate::TComp;
 
 /// Resource used for fixed timestep without repeats in the same frame (builtin timestep may run the system multiple times per frame).
 ///
@@ -22,26 +25,32 @@ use bevy::{
 /// ```
 /// `NearestNeighbourMarker` in this case refers to the (marker) component you also passed to the Plugin.
 #[derive(Resource, Default)]
-pub struct TimestepElapsed<TComp>(pub Timer, pub(crate) PhantomData<TComp>);
+pub struct TimestepLength<Comp>(pub Duration, pub(crate) PhantomData<Comp>);
 
-impl<TComp> Deref for TimestepElapsed<TComp> {
-    type Target = Timer;
+impl<Comp> TimestepLength<Comp> {
+    /// Set the length of the timestep.
+    pub fn set_duration(&mut self, duration: Duration) {
+        self.0 = duration;
+    }
 
-    fn deref(&self) -> &Self::Target {
-        &self.0
+    /// Get the length of the timestep.
+    pub fn get_duration(&self) -> Duration {
+        self.0
     }
 }
 
-impl<TComp> DerefMut for TimestepElapsed<TComp> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
-    }
-}
-
-pub fn on_timer_changeable<TRes>(mut elapsed: ResMut<TRes>, time: Res<Time>) -> bool
+pub fn on_timer_changeable<Comp>(
+    length: Res<TimestepLength<Comp>>,
+    time: Res<Time>,
+    mut timer: Local<Timer>,
+) -> bool
 where
-    TRes: Deref<Target = Timer> + DerefMut<Target = Timer> + Resource,
+    Comp: TComp,
 {
-    elapsed.tick(time.delta());
-    elapsed.just_finished()
+    if length.get_duration() != timer.duration() {
+        timer.set_mode(TimerMode::Repeating);
+        timer.set_duration(length.get_duration());
+    }
+    timer.tick(time.delta());
+    timer.just_finished()
 }

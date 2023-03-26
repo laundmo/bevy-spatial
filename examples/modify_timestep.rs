@@ -1,9 +1,9 @@
 use std::time::Duration;
 
 use bevy::prelude::*;
-use bevy_spatial::{KDTreeAccess2D, KDTreePlugin2D, SpatialAccess, TimestepElapsed};
+use bevy_spatial::{Spatial, TimestepLength};
 
-#[derive(Component)]
+#[derive(Component, Default)]
 struct NearestNeighbour;
 
 #[derive(Component)]
@@ -12,10 +12,10 @@ struct Chaser;
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-        .add_plugin(KDTreePlugin2D::<NearestNeighbour> {
-            timestep: Some(0.3),
-            ..default()
-        })
+        .add_plugin(
+            Spatial::new::<NearestNeighbour>()
+                .automatic_with_timestep(Duration::from_secs_f32(0.3)),
+        )
         .add_startup_system(setup)
         .add_system(move_to)
         .add_system(rotate_around)
@@ -88,15 +88,16 @@ fn move_to(
 
 fn mouseclick(
     mouse_input: Res<Input<MouseButton>>,
-    mut step: ResMut<TimestepElapsed<NearestNeighbour>>,
+    mut step: ResMut<TimestepLength<NearestNeighbour>>,
     mut other_duration: Local<Duration>,
 ) {
     if other_duration.is_zero() {
         *other_duration = Duration::from_millis(1);
     }
+
     if mouse_input.just_pressed(MouseButton::Left) {
-        let duration = *other_duration;
-        *other_duration = step.duration();
-        step.set_duration(duration);
+        let duration = step.get_duration();
+        step.set_duration(*other_duration);
+        *other_duration = duration;
     }
 }

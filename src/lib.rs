@@ -38,12 +38,14 @@ pub use self::spatial_access::SpatialAccess;
 use bevy::prelude::Component;
 // pub use test_plugin::TestPlugin;
 mod timestep;
+pub use self::timestep::TimestepLength;
 // mod types;
 
 mod kdtree;
 pub use self::kdtree::*;
 
 mod plugin;
+pub use self::plugin::Spatial;
 // mod resources_components;
 // #[cfg(feature = "rstar")]
 // mod rtree;

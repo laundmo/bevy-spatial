@@ -1,10 +1,14 @@
 use std::{any::Any, marker::PhantomData, time::Duration};
 
-use bevy::{app::PluginGroupBuilder, ecs::schedule::FreeSystemSet, prelude::*};
+use bevy::{
+    app::PluginGroupBuilder, ecs::schedule::FreeSystemSet, prelude::*,
+    time::common_conditions::on_timer,
+};
 
 use crate::{
-    spatial_access::SpatialAccess, timestep::on_timer_changeable, KDTree2, KDTree3, KDTree3A,
-    KDTreeD2, KDTreeD3, KDTreePlugin3A, TComp,
+    spatial_access::SpatialAccess,
+    timestep::{on_timer_changeable, TimestepLength},
+    KDTree2, KDTree3, KDTree3A, KDTreeD2, KDTreeD3, KDTreePlugin3A, TComp,
 };
 
 pub struct Spatial;
@@ -14,7 +18,7 @@ pub struct Spatial;
 pub struct SpatialSet;
 
 impl Spatial {
-    fn new<Comp: TComp>() -> SpatialPluginBuilder<Comp, SpatialSet> {
+    pub fn new<Comp: TComp>() -> SpatialPluginBuilder<Comp, SpatialSet> {
         SpatialPluginBuilder {
             comp: PhantomData,
             set: SpatialSet,
@@ -26,7 +30,7 @@ impl Spatial {
 }
 
 #[derive(Copy, Clone, Default)]
-enum SpatialStructure {
+pub enum SpatialStructure {
     KDTree2,
     KDTree3,
     #[default]
@@ -40,6 +44,7 @@ enum SpatialStructure {
 
 impl SpatialStructure {
     fn init_tree<'a, Comp: TComp>(&'a self, app: &'a mut App) -> &mut App {
+        todo!("move resource into plugin and use plugin here instead");
         match *self {
             SpatialStructure::KDTree2 => app.init_resource::<KDTree2<Comp>>(),
             SpatialStructure::KDTree3 => app.init_resource::<KDTree3<Comp>>(),
@@ -51,10 +56,10 @@ impl SpatialStructure {
 }
 
 #[derive(Clone, Default)]
-enum UpdateMode {
+pub enum UpdateMode {
     #[default]
-    Automatic,
-    AutomaticTimer(Timer),
+    FromTracker,
+    AutomaticTimer(Duration),
     Manual,
 }
 
@@ -63,20 +68,20 @@ where
     Comp: TComp,
     Set: FreeSystemSet,
 {
-    comp: PhantomData<Comp>,
-    base_set: CoreSet,
-    set: Set,
-    spatial_structure: SpatialStructure,
-    update_mode: UpdateMode,
+    pub comp: PhantomData<Comp>,
+    pub base_set: CoreSet,
+    pub set: Set,
+    pub spatial_structure: SpatialStructure,
+    pub update_mode: UpdateMode,
 }
 
 impl<Comp: TComp, Set: FreeSystemSet> SpatialPluginBuilder<Comp, Set> {
-    fn in_core_set(mut self, core_set: CoreSet) -> Self {
+    pub fn in_core_set(mut self, core_set: CoreSet) -> Self {
         self.base_set = core_set;
         self
     }
 
-    fn in_set<NewSet: FreeSystemSet>(self, set: NewSet) -> SpatialPluginBuilder<Comp, NewSet> {
+    pub fn in_set<NewSet: FreeSystemSet>(self, set: NewSet) -> SpatialPluginBuilder<Comp, NewSet> {
         // Struct filling for differing types is experimental. Have to manually list each.
         SpatialPluginBuilder {
             set,
@@ -87,8 +92,11 @@ impl<Comp: TComp, Set: FreeSystemSet> SpatialPluginBuilder<Comp, Set> {
         }
     }
 
-    fn automatic_with_timestep(mut self, duration: Duration) {
-        self.update_mode = UpdateMode::AutomaticTimer(Timer::new(duration, TimerMode::Repeating));
+    pub fn automatic_with_timestep(mut self, duration: Duration) -> Self {
+        self.update_mode = UpdateMode::AutomaticTimer(duration);
+        todo!("use typestate for this");
+        assert!(self.set.type_id() == SpatialSet.type_id());
+        self
     }
 }
 
@@ -96,13 +104,19 @@ impl<Comp: TComp, Set: FreeSystemSet + Copy> Plugin for SpatialPluginBuilder<Com
     fn build(&self, app: &mut App) {
         self.spatial_structure.init_tree::<Comp>(app);
         match self.update_mode {
-            UpdateMode::Automatic | UpdateMode::AutomaticTimer(_) => {
-                app.configure_set(self.set.in_base_set(self.base_set.clone()))
-                    .add_systems((test,).in_set(self.set));
+            UpdateMode::FromTracker => {
+                app.configure_set(self.set.in_base_set(self.base_set.clone()));
+            }
+            UpdateMode::AutomaticTimer(ref timer) => {
+                todo!("Add systems to update SpatialTracker component automatically from Transform or GlobalTransform.");
+                app.insert_resource(TimestepLength(*timer, PhantomData::<Comp>))
+                    .configure_set(
+                        SpatialSet
+                            .in_base_set(self.base_set.clone())
+                            .run_if(on_timer_changeable::<Comp>),
+                    );
             }
             UpdateMode::Manual => (),
         }
     }
 }
-
-fn test() {}
