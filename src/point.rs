@@ -141,3 +141,12 @@ pub struct SpatialTracker<Comp: TComp, P: IntoSpatialPoint> {
     c: PhantomData<Comp>,
     pub coord: P,
 }
+
+impl<Comp: TComp, P: IntoSpatialPoint> SpatialTracker<Comp, P> {
+    pub fn new(coord: P) -> Self {
+        Self {
+            c: PhantomData,
+            coord,
+        }
+    }
+}

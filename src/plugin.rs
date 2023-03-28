@@ -6,6 +6,7 @@ use bevy::{
 };
 
 use crate::{
+    point::{IntoSpatialPoint, SpatialTracker},
     spatial_access::SpatialAccess,
     timestep::{on_timer_changeable, TimestepLength},
     KDTree2, KDTree3, KDTree3A, KDTreeD2, KDTreeD3, KDTreePlugin3A, TComp,
@@ -22,7 +23,6 @@ impl Spatial {
         SpatialPluginBuilder {
             comp: PhantomData,
             set: SpatialSet,
-            base_set: CoreSet::PostUpdate,
             update_mode: default(),
             spatial_structure: default(),
         }
@@ -56,11 +56,27 @@ impl SpatialStructure {
 }
 
 #[derive(Clone, Default)]
-pub enum UpdateMode {
+pub enum TransformMode {
     #[default]
+    Transform,
+    GlobalTransform,
+}
+
+#[derive(Clone)]
+pub enum UpdateMode {
+    /// Update from the [`SpatialTracker`] - based on the event sent.
     FromTracker,
-    AutomaticTimer(Duration),
+    /// Automatically update based on changed trackers (Added, Removed) with a timer.
+    /// Use this to get the least effort setup.
+    AutomaticTimer(Duration, TransformMode),
     Manual,
+}
+
+impl Default for UpdateMode {
+    /// 50 ms means 20 times per second. That should be fine as a default.
+    fn default() -> Self {
+        UpdateMode::AutomaticTimer(Duration::from_millis(50), TransformMode::Transform)
+    }
 }
 
 pub struct SpatialPluginBuilder<Comp, Set>
@@ -69,33 +85,45 @@ where
     Set: FreeSystemSet,
 {
     pub comp: PhantomData<Comp>,
-    pub base_set: CoreSet,
     pub set: Set,
     pub spatial_structure: SpatialStructure,
     pub update_mode: UpdateMode,
 }
 
 impl<Comp: TComp, Set: FreeSystemSet> SpatialPluginBuilder<Comp, Set> {
-    pub fn in_core_set(mut self, core_set: CoreSet) -> Self {
-        self.base_set = core_set;
-        self
-    }
-
     pub fn in_set<NewSet: FreeSystemSet>(self, set: NewSet) -> SpatialPluginBuilder<Comp, NewSet> {
         // Struct filling for differing types is experimental. Have to manually list each.
         SpatialPluginBuilder {
             set,
             comp: PhantomData,
-            base_set: self.base_set,
             spatial_structure: self.spatial_structure,
             update_mode: self.update_mode,
         }
     }
 
-    pub fn automatic_with_timestep(mut self, duration: Duration) -> Self {
-        self.update_mode = UpdateMode::AutomaticTimer(duration);
-        todo!("use typestate for this");
-        assert!(self.set.type_id() == SpatialSet.type_id());
+    /// Automatically update the spatial data structure every duration,
+    /// using either [`Transform`] or [`GlobalTransform`] based on [`TransformMode`].
+    ///
+    /// This is essentially the same as [`SpatialPluginBuilder::update_from_tracker`],
+    /// with a added automatic system to extract the coordinate data and a already-set-up timer.
+    ///
+    /// The systems added by this are added to the [`SpatialPluginBuilder::set`].
+    pub fn update_automatic_with(mut self, duration: Duration, mode: TransformMode) -> Self {
+        self.update_mode = UpdateMode::AutomaticTimer(duration, mode);
+        self
+    }
+
+    /// Update based on the data in [`SpatialTracker`], whenever a [`UpdateEvent`] is sent.
+    ///
+    /// The systems added by this are added to the [`SpatialPluginBuilder::set`].
+    pub fn update_from_tracker(mut self) -> Self {
+        self.update_mode = UpdateMode::FromTracker;
+        self
+    }
+
+    /// For fully manual updates
+    pub fn update_manual(mut self) -> Self {
+        self.update_mode = UpdateMode::Manual;
         self
     }
 }
@@ -105,18 +133,43 @@ impl<Comp: TComp, Set: FreeSystemSet + Copy> Plugin for SpatialPluginBuilder<Com
         self.spatial_structure.init_tree::<Comp>(app);
         match self.update_mode {
             UpdateMode::FromTracker => {
-                app.configure_set(self.set.in_base_set(self.base_set.clone()));
+                app.configure_set(self.set);
             }
             UpdateMode::AutomaticTimer(ref timer) => {
                 todo!("Add systems to update SpatialTracker component automatically from Transform or GlobalTransform.");
                 app.insert_resource(TimestepLength(*timer, PhantomData::<Comp>))
-                    .configure_set(
-                        SpatialSet
-                            .in_base_set(self.base_set.clone())
-                            .run_if(on_timer_changeable::<Comp>),
-                    );
+                    .configure_set(self.set.run_if(on_timer_changeable::<Comp>));
             }
             UpdateMode::Manual => (),
         }
     }
 }
+
+macro_rules! impl_automatic_systems {
+    ($fnname:ident, $bvec:ty, $transform:ty, $conv:expr) => {
+        fn $fnname<Comp: TComp, P: IntoSpatialPoint>(
+            mut commands: Commands,
+            mut added_q: Query<(Entity, &$transform), Added<Comp>>,
+            mut tracker_q: Query<&mut SpatialTracker<Comp, $bvec>>,
+        ) {
+            for (e, t) in &added_q {
+                let track = tracker_q.get_mut(e);
+                let vec = $conv(t.translation);
+                match track {
+                    Ok(tracker) => {
+                        tracker.coord = vec;
+                    }
+                    Err(_) => {
+                        commands
+                            .entity(e)
+                            .insert(SpatialTracker::<Comp, $bvec>::new(vec));
+                    }
+                }
+            }
+        }
+    };
+}
+impl_automatic_systems!(vec2_transform_added, Vec2, Transform, Vec3::truncate);
+
+/// Event used to signal to a Spatial Datastructure that it should update from the [`SpatialTracker`].
+pub struct UpdateEvent<Comp: TComp, T>(PhantomData<Comp>, PhantomData<T>);
