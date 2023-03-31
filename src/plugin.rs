@@ -1,12 +1,16 @@
 use std::{any::Any, marker::PhantomData, time::Duration};
 
 use bevy::{
-    app::PluginGroupBuilder, ecs::schedule::FreeSystemSet, prelude::*,
+    app::PluginGroupBuilder,
+    ecs::schedule::FreeSystemSet,
+    math::{DVec2, DVec3, Vec3A},
+    prelude::*,
     time::common_conditions::on_timer,
 };
 
 use crate::{
-    point::{IntoSpatialPoint, SpatialTracker},
+    automatic_systems::TransformMode,
+    point::SpatialTracker,
     spatial_access::SpatialAccess,
     timestep::{on_timer_changeable, TimestepLength},
     KDTree2, KDTree3, KDTree3A, KDTreeD2, KDTreeD3, KDTreePlugin3A, TComp,
@@ -35,8 +39,6 @@ pub enum SpatialStructure {
     KDTree3,
     #[default]
     KDTree3A,
-    KDTreeD2,
-    KDTreeD3,
     // Linear/naive (linfa?)
     // Grid
     // RStar
@@ -49,17 +51,8 @@ impl SpatialStructure {
             SpatialStructure::KDTree2 => app.init_resource::<KDTree2<Comp>>(),
             SpatialStructure::KDTree3 => app.init_resource::<KDTree3<Comp>>(),
             SpatialStructure::KDTree3A => app.init_resource::<KDTree3A<Comp>>(),
-            SpatialStructure::KDTreeD2 => app.init_resource::<KDTreeD2<Comp>>(),
-            SpatialStructure::KDTreeD3 => app.init_resource::<KDTreeD3<Comp>>(),
         }
     }
-}
-
-#[derive(Clone, Default)]
-pub enum TransformMode {
-    #[default]
-    Transform,
-    GlobalTransform,
 }
 
 #[derive(Clone)]
@@ -135,41 +128,15 @@ impl<Comp: TComp, Set: FreeSystemSet + Copy> Plugin for SpatialPluginBuilder<Com
             UpdateMode::FromTracker => {
                 app.configure_set(self.set);
             }
-            UpdateMode::AutomaticTimer(ref timer) => {
-                todo!("Add systems to update SpatialTracker component automatically from Transform or GlobalTransform.");
+            UpdateMode::AutomaticTimer(ref timer, mode) => {
                 app.insert_resource(TimestepLength(*timer, PhantomData::<Comp>))
                     .configure_set(self.set.run_if(on_timer_changeable::<Comp>));
+                todo!("Add systems to update SpatialTracker component automatically from Transform or GlobalTransform.");
             }
             UpdateMode::Manual => (),
         }
     }
 }
-
-macro_rules! impl_automatic_systems {
-    ($fnname:ident, $bvec:ty, $transform:ty, $conv:expr) => {
-        fn $fnname<Comp: TComp, P: IntoSpatialPoint>(
-            mut commands: Commands,
-            mut added_q: Query<(Entity, &$transform), Added<Comp>>,
-            mut tracker_q: Query<&mut SpatialTracker<Comp, $bvec>>,
-        ) {
-            for (e, t) in &added_q {
-                let track = tracker_q.get_mut(e);
-                let vec = $conv(t.translation);
-                match track {
-                    Ok(tracker) => {
-                        tracker.coord = vec;
-                    }
-                    Err(_) => {
-                        commands
-                            .entity(e)
-                            .insert(SpatialTracker::<Comp, $bvec>::new(vec));
-                    }
-                }
-            }
-        }
-    };
-}
-impl_automatic_systems!(vec2_transform_added, Vec2, Transform, Vec3::truncate);
 
 /// Event used to signal to a Spatial Datastructure that it should update from the [`SpatialTracker`].
 pub struct UpdateEvent<Comp: TComp, T>(PhantomData<Comp>, PhantomData<T>);

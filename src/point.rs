@@ -1,4 +1,7 @@
-use bevy::prelude::{Component, Entity};
+use bevy::{
+    math::{Vec2, Vec3, Vec3A},
+    prelude::{Component, Entity, GlobalTransform, Transform},
+};
 use num_traits::{Bounded, Num, Signed};
 use std::{fmt::Debug, marker::PhantomData};
 use typenum::Unsigned;
@@ -150,3 +153,40 @@ impl<Comp: TComp, P: IntoSpatialPoint> SpatialTracker<Comp, P> {
         }
     }
 }
+
+pub trait VecFromTransform<T>
+where
+    Self: Sized + Copy,
+{
+    type Vec: Copy + Sized;
+    fn from_transform(t: &T) -> Self::Vec;
+}
+
+macro_rules! impl_from_transform {
+    ($vec:ident, $tr:ident, $conv:expr) => {
+        impl VecFromTransform<$tr> for $vec {
+            type Vec = $vec;
+            fn from_transform(t: &$tr) -> Self::Vec {
+                $conv(t)
+            }
+        }
+    };
+}
+
+// Transform
+impl_from_transform!(Vec2, Transform, |t: &Transform| {
+    t.translation.truncate()
+});
+impl_from_transform!(Vec3, Transform, |t: &Transform| { t.translation });
+impl_from_transform!(Vec3A, Transform, |t: &Transform| { t.translation.into() });
+
+// GlobalTransform
+impl_from_transform!(Vec2, GlobalTransform, |t: &GlobalTransform| {
+    t.translation().truncate()
+});
+impl_from_transform!(Vec3, GlobalTransform, |t: &GlobalTransform| {
+    t.translation()
+});
+impl_from_transform!(Vec3A, GlobalTransform, |t: &GlobalTransform| {
+    t.translation().into()
+});

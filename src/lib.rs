@@ -46,6 +46,8 @@ pub use self::kdtree::*;
 
 mod plugin;
 pub use self::plugin::Spatial;
+
+mod automatic_systems;
 // mod resources_components;
 // #[cfg(feature = "rstar")]
 // mod rtree;
