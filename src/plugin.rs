@@ -1,43 +1,26 @@
-use std::{any::Any, marker::PhantomData, time::Duration};
+use std::{marker::PhantomData, time::Duration};
 
-use bevy::{
-    app::PluginGroupBuilder,
-    ecs::schedule::FreeSystemSet,
-    math::{DVec2, DVec3, Vec3A},
-    prelude::*,
-    time::common_conditions::on_timer,
-};
+use bevy::{ecs::schedule::FreeSystemSet, prelude::*};
 
 use crate::{
-    automatic_systems::TransformMode,
-    point::SpatialTracker,
-    spatial_access::SpatialAccess,
+    automatic_systems::{automatic_systems, TransformMode},
+    kdtree::{KDTree2, KDTree3, KDTree3A},
     timestep::{on_timer_changeable, TimestepLength},
-    KDTree2, KDTree3, KDTree3A, KDTreeD2, KDTreeD3, KDTreePlugin3A, TComp,
+    TComp,
 };
 
-pub struct Spatial;
-
-/// Default set for spatial datastructure updates. Can be overridden using [`SpatialPluginBuilder::in_set`]
+/// Default set for spatial datastructure updates. Can be overridden using [`SpatialPlugin::in_set`]
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone, Copy)]
 pub struct SpatialSet;
 
-impl Spatial {
-    pub fn new<Comp: TComp>() -> SpatialPluginBuilder<Comp, SpatialSet> {
-        SpatialPluginBuilder {
-            comp: PhantomData,
-            set: SpatialSet,
-            update_mode: default(),
-            spatial_structure: default(),
-        }
-    }
-}
-
 #[derive(Copy, Clone, Default)]
 pub enum SpatialStructure {
+    /// Corresponds to [`KdTree2`](crate::kdtree::KDTree2)
     KDTree2,
-    KDTree3,
+    /// Corresponds to [`KdTree3`](crate::kdtree::KDTree3)
     #[default]
+    KDTree3,
+    /// Corresponds to [`KdTree3A`](crate::kdtree::KDTree3A)
     KDTree3A,
     // Linear/naive (linfa?)
     // Grid
@@ -45,19 +28,18 @@ pub enum SpatialStructure {
 }
 
 impl SpatialStructure {
-    fn init_tree<'a, Comp: TComp>(&'a self, app: &'a mut App) -> &mut App {
-        todo!("move resource into plugin and use plugin here instead");
+    fn init_tree<'a, Comp: TComp>(&'a self, app: &'a mut App, mode: &'a UpdateMode) -> &mut App {
         match *self {
-            SpatialStructure::KDTree2 => app.init_resource::<KDTree2<Comp>>(),
-            SpatialStructure::KDTree3 => app.init_resource::<KDTree3<Comp>>(),
-            SpatialStructure::KDTree3A => app.init_resource::<KDTree3A<Comp>>(),
+            SpatialStructure::KDTree2 => <KDTree2<Comp>>::build(mode, app),
+            SpatialStructure::KDTree3 => <KDTree3<Comp>>::build(mode, app),
+            SpatialStructure::KDTree3A => <KDTree3A<Comp>>::build(mode, app),
         }
     }
 }
 
 #[derive(Clone)]
-pub enum UpdateMode {
-    /// Update from the [`SpatialTracker`] - based on the event sent.
+pub(crate) enum UpdateMode {
+    /// Update from the [`SpatialTracker`](crate::point::SpatialTracker) when a event is sent.
     FromTracker,
     /// Automatically update based on changed trackers (Added, Removed) with a timer.
     /// Use this to get the least effort setup.
@@ -72,21 +54,59 @@ impl Default for UpdateMode {
     }
 }
 
-pub struct SpatialPluginBuilder<Comp, Set>
+pub struct SpatialPlugin<Comp, Set>
 where
     Comp: TComp,
     Set: FreeSystemSet,
 {
-    pub comp: PhantomData<Comp>,
-    pub set: Set,
-    pub spatial_structure: SpatialStructure,
-    pub update_mode: UpdateMode,
+    pub(crate) comp: PhantomData<Comp>,
+    pub(crate) set: Set,
+    pub(crate) spatial_structure: SpatialStructure,
+    pub(crate) update_mode: UpdateMode,
 }
 
-impl<Comp: TComp, Set: FreeSystemSet> SpatialPluginBuilder<Comp, Set> {
-    pub fn in_set<NewSet: FreeSystemSet>(self, set: NewSet) -> SpatialPluginBuilder<Comp, NewSet> {
+/// Builds a [`SpatialPlugin`].
+///
+/// Exists only to avoid needing to specify the [`FreeSystemSet`] manually.
+/// If you want to change the set from the default, use [`in_set`](SpatialPlugin::in_set)
+pub struct SpatialBuilder;
+
+impl SpatialBuilder {
+    /// Make a new [`SpatialPlugin`] with the default values.
+    #[allow(clippy::new_ret_no_self)]
+    pub fn new<Comp: TComp>() -> SpatialPlugin<Comp, SpatialSet> {
+        default()
+    }
+}
+
+impl<Comp: TComp> Default for SpatialPlugin<Comp, SpatialSet> {
+    fn default() -> Self {
+        SpatialPlugin {
+            comp: PhantomData,
+            set: SpatialSet,
+            update_mode: default(),
+            spatial_structure: default(),
+        }
+    }
+}
+
+impl<Comp: TComp, Set: FreeSystemSet> SpatialPlugin<Comp, Set> {
+    /// Which spatial structure to use.
+    ///
+    /// Available options are:
+    ///
+    /// - [`SpatialStructure::KDTree2`] stores [`Vec2`]
+    /// - [`SpatialStructure::KDTree3`] stores [`Vec3`]
+    /// - [`SpatialStructure::KDTree3A`] stores [`Vec3A`](bevy::math::Vec3A)
+    pub fn spatial_structure(mut self, spatial_structure: SpatialStructure) -> Self {
+        self.spatial_structure = spatial_structure;
+        self
+    }
+
+    /// Change the Bevy [`FreeSystemSet`] in which this plugin will put its systems.
+    pub fn in_set<NewSet: FreeSystemSet>(self, set: NewSet) -> SpatialPlugin<Comp, NewSet> {
         // Struct filling for differing types is experimental. Have to manually list each.
-        SpatialPluginBuilder {
+        SpatialPlugin {
             set,
             comp: PhantomData,
             spatial_structure: self.spatial_structure,
@@ -97,46 +117,60 @@ impl<Comp: TComp, Set: FreeSystemSet> SpatialPluginBuilder<Comp, Set> {
     /// Automatically update the spatial data structure every duration,
     /// using either [`Transform`] or [`GlobalTransform`] based on [`TransformMode`].
     ///
-    /// This is essentially the same as [`SpatialPluginBuilder::update_from_tracker`],
-    /// with a added automatic system to extract the coordinate data and a already-set-up timer.
+    /// This is essentially the same as [`update_from_tracker`](SpatialPlugin::update_from_tracker).,
+    /// with a added automatic system to extract the coordinate data to the [`SpatialTracker`](crate::point::SpatialTracker) and a already-set-up timer.
     ///
-    /// The systems added by this are added to the [`SpatialPluginBuilder::set`].
+    /// The systems added by this are added to the [`set`](SpatialPlugin::in_set).
     pub fn update_automatic_with(mut self, duration: Duration, mode: TransformMode) -> Self {
         self.update_mode = UpdateMode::AutomaticTimer(duration, mode);
         self
     }
 
-    /// Update based on the data in [`SpatialTracker`], whenever a [`UpdateEvent`] is sent.
+    /// Update based on the data in [`SpatialTracker`](crate::point::SpatialTracker), whenever a [`UpdateEvent`] is sent.
     ///
-    /// The systems added by this are added to the [`SpatialPluginBuilder::set`].
+    /// In this mode, you are supposed to write whatever data you want to [`SpatialTracker`](crate::point::SpatialTracker).
+    /// This allows full control over the coordinates used. Great for custom coordinate systems.
+    ///
+    /// The systems added by this are added to the [`set`](SpatialPlugin::in_set).
     pub fn update_from_tracker(mut self) -> Self {
         self.update_mode = UpdateMode::FromTracker;
         self
     }
 
-    /// For fully manual updates
+    /// For fully manual updates. See todo!("manual updates example") for a example on how to do this.
+    ///
+    /// Does nothing except adding the Spatial Datastructure as a resource, for you to update yourself.
+    /// Good if you want more control than [`update_from_tracker`](SpatialPlugin::update_from_tracker) allows for.
     pub fn update_manual(mut self) -> Self {
         self.update_mode = UpdateMode::Manual;
         self
     }
 }
 
-impl<Comp: TComp, Set: FreeSystemSet + Copy> Plugin for SpatialPluginBuilder<Comp, Set> {
+impl<Comp: TComp, Set: FreeSystemSet + Copy> Plugin for SpatialPlugin<Comp, Set> {
     fn build(&self, app: &mut App) {
-        self.spatial_structure.init_tree::<Comp>(app);
+        self.spatial_structure
+            .init_tree::<Comp>(app, &self.update_mode);
         match self.update_mode {
             UpdateMode::FromTracker => {
                 app.configure_set(self.set);
             }
             UpdateMode::AutomaticTimer(ref timer, mode) => {
+                automatic_systems::<Comp>(app, mode, self.spatial_structure, self.set);
                 app.insert_resource(TimestepLength(*timer, PhantomData::<Comp>))
                     .configure_set(self.set.run_if(on_timer_changeable::<Comp>));
-                todo!("Add systems to update SpatialTracker component automatically from Transform or GlobalTransform.");
             }
             UpdateMode::Manual => (),
         }
     }
 }
 
-/// Event used to signal to a Spatial Datastructure that it should update from the [`SpatialTracker`].
-pub struct UpdateEvent<Comp: TComp, T>(PhantomData<Comp>, PhantomData<T>);
+/// Event used to signal to a Spatial Datastructure that it should update from the [`SpatialTracker`](crate::point::SpatialTracker).
+#[derive(Default, Copy, Clone)]
+pub struct UpdateEvent<SpatialStructure>(PhantomData<SpatialStructure>);
+
+pub fn send_update_event<SpatialStructure: Send + Sync + 'static>(
+    mut evnt: EventWriter<UpdateEvent<SpatialStructure>>,
+) {
+    evnt.send(UpdateEvent(PhantomData));
+}

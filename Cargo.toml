@@ -68,7 +68,7 @@ required-features = ["kdtree"]
 
 [[example]]
 name = "movetowards"
-required-features = ["rstar"]
+required-features = ["kdtree"]
 
 [package.metadata.docs.rs]
 all-features = true

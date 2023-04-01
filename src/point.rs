@@ -1,7 +1,4 @@
-use bevy::{
-    math::{Vec2, Vec3, Vec3A},
-    prelude::{Component, Entity, GlobalTransform, Transform},
-};
+use bevy::prelude::{Component, Entity};
 use num_traits::{Bounded, Num, Signed};
 use std::{fmt::Debug, marker::PhantomData};
 use typenum::Unsigned;
@@ -11,33 +8,40 @@ pub trait Scalar: Bounded + Num + Clone + Copy + Signed + PartialOrd + Debug {}
 impl<T> Scalar for T where T: Bounded + Num + Clone + Copy + Signed + PartialOrd + Debug {}
 
 // Matches closely what rstar and kdtree use
+#[allow(clippy::module_name_repetitions)]
 pub trait SpatialPoint: Copy + Clone + PartialEq + Debug {
-    /// The Scalar type of a vector, example: f32, f64
+    /// The Scalar type of a vector, example: [`f32`], [`f64`]
     type Scalar: Scalar;
 
-    /// The vector type itself, for example [`crate::point::SVec3`]
+    /// The vector type itself, for example [`Vec3`](bevy::prelude::Vec3)
     type Vec;
 
     /// The dimension of this vector, like [`typenum::U2`] [`typenum::U3`]
     type Dimension: Unsigned;
 
-    /// `nth` always smaller than [`Self::Dimension`].
+    /// Get the value at this index.
+    /// Used for datastructure specific implementations.
+    ///
+    /// `nth` is always smaller than [`Self::Dimension`].
     fn at(&self, nth: usize) -> Self::Scalar;
 
     /// Get the squared distance of this point to another point of the same type.
     fn distance_squared(&self, other: &Self) -> Self::Scalar;
 
-    /// Get the minimum between this and another point
+    /// Get the elementwise minimum between this and another point
     fn min_point(&self, other: &Self) -> Self::Vec;
 
-    /// Get the maximum between this and another point
+    /// Get the elementwise maximum between this and another point
     fn max_point(&self, other: &Self) -> Self::Vec;
 
+    /// Get the Entity associated with this point.
     fn entity(&self) -> Option<Entity>;
 
+    /// Get a this points vector.
     fn vec(&self) -> Self::Vec;
 }
 
+#[allow(clippy::module_name_repetitions)]
 pub trait IntoSpatialPoint
 where
     Self: Sized + Copy,
@@ -153,40 +157,3 @@ impl<Comp: TComp, P: IntoSpatialPoint> SpatialTracker<Comp, P> {
         }
     }
 }
-
-pub trait VecFromTransform<T>
-where
-    Self: Sized + Copy,
-{
-    type Vec: Copy + Sized;
-    fn from_transform(t: &T) -> Self::Vec;
-}
-
-macro_rules! impl_from_transform {
-    ($vec:ident, $tr:ident, $conv:expr) => {
-        impl VecFromTransform<$tr> for $vec {
-            type Vec = $vec;
-            fn from_transform(t: &$tr) -> Self::Vec {
-                $conv(t)
-            }
-        }
-    };
-}
-
-// Transform
-impl_from_transform!(Vec2, Transform, |t: &Transform| {
-    t.translation.truncate()
-});
-impl_from_transform!(Vec3, Transform, |t: &Transform| { t.translation });
-impl_from_transform!(Vec3A, Transform, |t: &Transform| { t.translation.into() });
-
-// GlobalTransform
-impl_from_transform!(Vec2, GlobalTransform, |t: &GlobalTransform| {
-    t.translation().truncate()
-});
-impl_from_transform!(Vec3, GlobalTransform, |t: &GlobalTransform| {
-    t.translation()
-});
-impl_from_transform!(Vec3A, GlobalTransform, |t: &GlobalTransform| {
-    t.translation().into()
-});

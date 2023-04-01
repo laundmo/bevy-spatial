@@ -1,8 +1,8 @@
-use bevy::{ecs::schedule::FreeSystemSet, prelude::*};
+use bevy::prelude::*;
 use kd_tree::{KdPoint, KdTree as BaseKdTree, KdTreeN};
 
 use crate::{
-    plugin::{SpatialPluginBuilder, SpatialSet, UpdateEvent, UpdateMode},
+    plugin::{UpdateEvent, UpdateMode},
     point::{IntoSpatialPoint, SpatialPoint, SpatialTracker},
     spatial_access::{SpatialAccess, UpdateSpatialAccess},
     TComp,
@@ -13,7 +13,7 @@ use std::marker::PhantomData;
 use bevy::prelude::Resource;
 
 macro_rules! kdtree_impl {
-    ($pt:ty, $treename:ident, $pluginname:ident) => {
+    ($pt:ty, $treename:ident) => {
         impl KdPoint for $pt {
             type Scalar = <$pt as SpatialPoint>::Scalar;
 
@@ -24,15 +24,45 @@ macro_rules! kdtree_impl {
             }
         }
 
-        #[derive(Resource, Default)]
+        #[derive(Resource)]
         pub struct $treename<Comp> {
             pub tree: BaseKdTree<$pt>,
             pub component_type: PhantomData<Comp>,
         }
 
-        #[derive(Default)]
-        pub struct $pluginname<Comp> {
-            tcomp: PhantomData<Comp>,
+        impl<Comp> Default for $treename<Comp> {
+            fn default() -> Self {
+                Self {
+                    tree: default(),
+                    component_type: PhantomData,
+                }
+            }
+        }
+
+        impl<Comp: TComp> $treename<Comp> {
+            fn update(
+                mut tree: ResMut<$treename<Comp>>,
+                query: Query<(Entity, &SpatialTracker<Comp, <$pt as SpatialPoint>::Vec>)>,
+            ) {
+                tree.rebuild(query.iter().map(|(e, i)| i.coord.into_spatial_point(e)));
+            }
+
+            pub(crate) fn build<'a>(update_mode: &'a UpdateMode, app: &'a mut App) -> &'a mut App {
+                app.init_resource::<$treename<Comp>>()
+                    .add_event::<UpdateEvent<Self>>();
+
+                match update_mode {
+                    UpdateMode::FromTracker | UpdateMode::AutomaticTimer(_, _) => {
+                        app.add_system(
+                            Self::update
+                                .no_default_base_set()
+                                .run_if(on_event::<UpdateEvent<Self>>()),
+                        );
+                    }
+                    UpdateMode::Manual => (),
+                }
+                app
+            }
         }
 
         impl<Comp> SpatialAccess for $treename<Comp>
@@ -114,37 +144,8 @@ macro_rules! kdtree_impl {
         }
     };
 }
-kdtree_impl!(crate::point::Point2, KDTree2, KDTreePlugin2);
-kdtree_impl!(crate::point::Point3, KDTree3, KDTreePlugin3);
-kdtree_impl!(crate::point::Point3A, KDTree3A, KDTreePlugin3A);
-kdtree_impl!(crate::point::PointD2, KDTreeD2, KDTreePluginD2);
-kdtree_impl!(crate::point::PointD3, KDTreeD3, KDTreePluginD3);
-
-impl<Comp: TComp> KDTreePlugin2<Comp> {
-    fn update(
-        mut tree: ResMut<KDTree2<Comp>>,
-        query: Query<(Entity, &SpatialTracker<Comp, Vec2>)>,
-    ) {
-        tree.rebuild(query.iter().map(|(e, i)| i.coord.into_spatial_point(e)));
-    }
-
-    fn build<Set: FreeSystemSet + Copy>(
-        &self,
-        spb: SpatialPluginBuilder<Comp, Set>,
-        app: &mut App,
-    ) {
-        app.init_resource::<KDTree2<Comp>>()
-            .add_event::<UpdateEvent<Comp, Self>>();
-
-        match spb.update_mode {
-            UpdateMode::FromTracker | UpdateMode::AutomaticTimer(_, _) => {
-                app.add_system(
-                    Self::update
-                        .no_default_base_set()
-                        .run_if(on_event::<UpdateEvent<Comp, Self>>()),
-                );
-            }
-            UpdateMode::Manual => (),
-        }
-    }
-}
+kdtree_impl!(crate::point::Point2, KDTree2);
+kdtree_impl!(crate::point::Point3, KDTree3);
+kdtree_impl!(crate::point::Point3A, KDTree3A);
+kdtree_impl!(crate::point::PointD2, KDTreeD2);
+kdtree_impl!(crate::point::PointD3, KDTreeD3);

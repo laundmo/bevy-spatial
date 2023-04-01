@@ -1,11 +1,7 @@
-use std::{
-    marker::PhantomData,
-    ops::{Deref, DerefMut},
-    time::Duration,
-};
+use std::{marker::PhantomData, time::Duration};
 
 use bevy::{
-    prelude::{Component, Local, Res, ResMut, Resource},
+    prelude::{Local, Res, Resource},
     time::{Time, Timer, TimerMode},
 };
 

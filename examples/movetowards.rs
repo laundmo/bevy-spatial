@@ -1,7 +1,10 @@
-use bevy::prelude::*;
-use bevy_spatial::{DefaultParams, RTreeAccess2D, RTreePlugin2D, SpatialAccess};
+use bevy::{log::LogPlugin, prelude::*, window::PrimaryWindow};
+use bevy_spatial::{
+    kdtree::KDTree3, SpatialAccess, SpatialBuilder, SpatialStructure, TransformMode,
+};
+use std::time::Duration;
 
-#[derive(Component)]
+#[derive(Component, Default)]
 struct NearestNeighbour;
 
 #[derive(Component)]
@@ -9,15 +12,19 @@ struct MoveTowards;
 
 fn main() {
     App::new()
-        .add_plugins(DefaultPlugins)
-        .add_plugin(RTreePlugin2D::<NearestNeighbour, DefaultParams> { ..default() })
+        .add_plugins(DefaultPlugins.build().disable::<LogPlugin>())
+        .add_plugin(
+            SpatialBuilder::new::<NearestNeighbour>()
+                .spatial_structure(SpatialStructure::KDTree3)
+                .update_automatic_with(Duration::from_secs(1), TransformMode::Transform),
+        )
         .add_startup_system(setup)
         .add_system(mouseclick)
         .add_system(move_to)
         .run();
 }
 
-type NNTree = RTreeAccess2D<NearestNeighbour, DefaultParams>;
+type NNTree = KDTree3<NearestNeighbour>;
 
 fn setup(mut commands: Commands) {
     commands.spawn(Camera2dBundle::default());
@@ -42,8 +49,12 @@ fn setup(mut commands: Commands) {
     }
 }
 
-fn mouseclick(mut commands: Commands, mouse_input: Res<Input<MouseButton>>, windows: Res<Windows>) {
-    let win = windows.get_primary().unwrap();
+fn mouseclick(
+    mut commands: Commands,
+    mouse_input: Res<Input<MouseButton>>,
+    window: Query<&Window, With<PrimaryWindow>>,
+) {
+    let win = window.get_single().unwrap();
     if mouse_input.just_pressed(MouseButton::Left) {
         if let Some(mut pos) = win.cursor_position() {
             pos.x -= win.width() / 2.0;

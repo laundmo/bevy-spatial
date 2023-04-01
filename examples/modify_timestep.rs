@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use bevy::prelude::*;
-use bevy_spatial::{Spatial, TimestepLength};
+use bevy_spatial::{SpatialBuilder, TimestepLength};
 
 #[derive(Component, Default)]
 struct NearestNeighbour;
@@ -13,7 +13,7 @@ fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .add_plugin(
-            Spatial::new::<NearestNeighbour>()
+            SpatialBuilder::new::<NearestNeighbour>()
                 .automatic_with_timestep(Duration::from_secs_f32(0.3)),
         )
         .add_startup_system(setup)
