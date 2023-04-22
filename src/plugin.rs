@@ -3,8 +3,8 @@ use std::{marker::PhantomData, time::Duration};
 use bevy::{ecs::schedule::FreeSystemSet, prelude::*};
 
 use crate::{
-    automatic_systems::{AutoUpdateGTransform, AutoUpdateTransform, TransformMode},
-    kdtree::{KDTree2, KDTree2Plugin, KDTree3, KDTree3A, KDTree3APlugin, KDTree3Plugin},
+    automatic_systems::{AutoGT, AutoT, TransformMode},
+    kdtree::{KDTree2, KDTree3, KDTree3A},
     timestep::{on_timer_changeable, TimestepLength},
     TComp,
 };
@@ -95,48 +95,24 @@ impl<Comp: TComp, Set: FreeSystemSet + Copy> Plugin for AutomaticUpdatePlugin<Co
     fn build(&self, app: &mut App) {
         app.insert_resource(TimestepLength(self.frequency, PhantomData::<Comp>))
             .configure_set(self.set.run_if(on_timer_changeable::<Comp>));
+
         match self.spatial_ds {
-            SpatialStructure::KDTree2 => {
-                app.add_plugin(KDTree2Plugin::<Comp>::default());
-                match self.transform {
-                    TransformMode::Transform => {
-                        AutoUpdateTransform::<KDTree2<Comp>>::build(app, self.set);
-                    }
-                    TransformMode::GlobalTransform => {
-                        AutoUpdateGTransform::<KDTree2<Comp>>::build(app, self.set);
-                    }
-                }
-            }
-            SpatialStructure::KDTree3 => {
-                app.add_plugin(KDTree3Plugin::<Comp>::default());
-                match self.transform {
-                    TransformMode::Transform => {
-                        AutoUpdateTransform::<KDTree3<Comp>>::build(app, self.set);
-                    }
-                    TransformMode::GlobalTransform => {
-                        AutoUpdateGTransform::<KDTree3<Comp>>::build(app, self.set);
-                    }
-                }
-            }
-            SpatialStructure::KDTree3A => {
-                app.add_plugin(KDTree3APlugin::<Comp>::default());
-                match self.transform {
-                    TransformMode::Transform => {
-                        AutoUpdateTransform::<KDTree3A<Comp>>::build(app, self.set);
-                    }
-                    TransformMode::GlobalTransform => {
-                        AutoUpdateGTransform::<KDTree3A<Comp>>::build(app, self.set);
-                    }
-                }
-            }
-        }
+            SpatialStructure::KDTree2 => app.init_resource::<KDTree2<Comp>>(),
+            SpatialStructure::KDTree3 => app.init_resource::<KDTree3<Comp>>(),
+            SpatialStructure::KDTree3A => app.init_resource::<KDTree3A<Comp>>(),
+        };
+
+        match self.transform {
+            TransformMode::Transform => match self.spatial_ds {
+                SpatialStructure::KDTree2 => AutoT::<KDTree2<Comp>>::build(app, self.set),
+                SpatialStructure::KDTree3 => AutoT::<KDTree3<Comp>>::build(app, self.set),
+                SpatialStructure::KDTree3A => AutoT::<KDTree3A<Comp>>::build(app, self.set),
+            },
+            TransformMode::GlobalTransform => match self.spatial_ds {
+                SpatialStructure::KDTree2 => AutoGT::<KDTree2<Comp>>::build(app, self.set),
+                SpatialStructure::KDTree3 => AutoGT::<KDTree3<Comp>>::build(app, self.set),
+                SpatialStructure::KDTree3A => AutoGT::<KDTree3A<Comp>>::build(app, self.set),
+            },
+        };
     }
-}
-
-/// Event used to signal to a Spatial Datastructure that it should update from the [`SpatialTracker`](crate::point::SpatialTracker).
-#[derive(Default, Copy, Clone)]
-pub struct UpdateEvent<SpatialStructure>(PhantomData<SpatialStructure>);
-
-pub fn send_update_event<T: Send + Sync + 'static>(mut evnt: EventWriter<UpdateEvent<T>>) {
-    evnt.send(UpdateEvent(PhantomData));
 }

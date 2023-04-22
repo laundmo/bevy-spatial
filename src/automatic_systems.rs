@@ -22,9 +22,9 @@ pub enum TransformMode {
 
 type GlamVec<S> = <<S as SpatialAccess>::Point as SpatialPoint>::Vec;
 
-pub struct AutoUpdateTransform<SpatialDS>(PhantomData<SpatialDS>);
+pub(crate) struct AutoT<SpatialDS>(PhantomData<SpatialDS>);
 
-impl<SpatialDS> AutoUpdateTransform<SpatialDS>
+impl<SpatialDS> AutoT<SpatialDS>
 where
     GlamVec<SpatialDS>: VecFromTransform,
     SpatialDS: UpdateSpatialAccess + Resource,
@@ -53,9 +53,9 @@ where
     }
 }
 
-pub struct AutoUpdateGTransform<SpatialDS>(PhantomData<SpatialDS>);
+pub(crate) struct AutoGT<SpatialDS>(PhantomData<SpatialDS>);
 
-impl<SpatialDS> AutoUpdateGTransform<SpatialDS>
+impl<SpatialDS> AutoGT<SpatialDS>
 where
     GlamVec<SpatialDS>: VecFromGlobalTransform,
     SpatialDS: UpdateSpatialAccess + Resource,

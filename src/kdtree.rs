@@ -1,9 +1,8 @@
-use bevy::{math::Vec3A, prelude::*};
+use bevy::prelude::*;
 use kd_tree::{KdPoint, KdTree as BaseKdTree, KdTreeN};
 
 use crate::{
-    plugin::UpdateEvent,
-    point::{IntoSpatialPoint, SpatialPoint, SpatialTracker},
+    point::SpatialPoint,
     spatial_access::{SpatialAccess, UpdateSpatialAccess},
     TComp,
 };
@@ -13,7 +12,7 @@ use std::marker::PhantomData;
 use bevy::prelude::Resource;
 
 macro_rules! kdtree_impl {
-    ($pt:ty, $treename:ident, $pluginname:ident) => {
+    ($pt:ty, $treename:ident) => {
         impl KdPoint for $pt {
             type Scalar = <$pt as SpatialPoint>::Scalar;
 
@@ -36,39 +35,6 @@ macro_rules! kdtree_impl {
                     tree: default(),
                     component_type: PhantomData,
                 }
-            }
-        }
-
-        impl<Comp: TComp> $treename<Comp> {
-            fn update(
-                mut tree: ResMut<$treename<Comp>>,
-                query: Query<(Entity, &SpatialTracker<Comp, <$pt as SpatialPoint>::Vec>)>,
-            ) {
-                tree.update(
-                    query
-                        .iter()
-                        .map(|(e, i)| (i.coord.into_spatial_point(e), true)),
-                    [].into_iter(),
-                );
-            }
-        }
-
-        pub struct $pluginname<Comp>(PhantomData<Comp>);
-        impl<Comp> Default for $pluginname<Comp> {
-            fn default() -> Self {
-                Self(PhantomData)
-            }
-        }
-
-        impl<Comp: TComp> Plugin for $pluginname<Comp> {
-            fn build(&self, app: &mut App) {
-                app.init_resource::<$treename<Comp>>()
-                    .add_event::<UpdateEvent<$treename<Comp>>>()
-                    .add_system(
-                        $treename::<Comp>::update
-                            .no_default_base_set()
-                            .run_if(on_event::<UpdateEvent<$treename<Comp>>>()),
-                    );
             }
         }
 
@@ -152,12 +118,14 @@ macro_rules! kdtree_impl {
                 false
             }
 
-            fn clear(&mut self) {}
+            fn clear(&mut self) {
+                self.tree = KdTreeN::default();
+            }
         }
     };
 }
-kdtree_impl!(crate::point::Point2, KDTree2, KDTree2Plugin);
-kdtree_impl!(crate::point::Point3, KDTree3, KDTree3Plugin);
-kdtree_impl!(crate::point::Point3A, KDTree3A, KDTree3APlugin);
-kdtree_impl!(crate::point::PointD2, KDTreeD2, KDTreeD2Plugin);
-kdtree_impl!(crate::point::PointD3, KDTreeD3, KDTreeD3Plugin);
+kdtree_impl!(crate::point::Point2, KDTree2);
+kdtree_impl!(crate::point::Point3, KDTree3);
+kdtree_impl!(crate::point::Point3A, KDTree3A);
+kdtree_impl!(crate::point::PointD2, KDTreeD2);
+kdtree_impl!(crate::point::PointD3, KDTreeD3);
