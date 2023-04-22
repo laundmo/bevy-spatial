@@ -1,6 +1,6 @@
 use bevy::{log::LogPlugin, prelude::*, window::PrimaryWindow};
 use bevy_spatial::{
-    kdtree::KDTree3, SpatialAccess, SpatialBuilder, SpatialStructure, TransformMode,
+    kdtree::KDTree3, AutomaticUpdate, SpatialAccess, SpatialStructure, TransformMode,
 };
 use std::time::Duration;
 
@@ -14,9 +14,10 @@ fn main() {
     App::new()
         .add_plugins(DefaultPlugins.build().disable::<LogPlugin>())
         .add_plugin(
-            SpatialBuilder::new::<NearestNeighbour>()
-                .spatial_structure(SpatialStructure::KDTree3)
-                .update_automatic_with(Duration::from_secs(1), TransformMode::Transform),
+            AutomaticUpdate::<NearestNeighbour>::new()
+                .with_spatial_ds(SpatialStructure::KDTree3)
+                .with_frequency(Duration::from_secs(1))
+                .with_transform(TransformMode::Transform),
         )
         .add_startup_system(setup)
         .add_system(mouseclick)

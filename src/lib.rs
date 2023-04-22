@@ -42,7 +42,7 @@ pub use self::timestep::TimestepLength;
 pub mod kdtree;
 
 mod plugin;
-pub use plugin::{SpatialBuilder, SpatialStructure, UpdateEvent, *};
+pub use plugin::{SpatialStructure, *};
 
 mod automatic_systems;
 pub use automatic_systems::TransformMode;

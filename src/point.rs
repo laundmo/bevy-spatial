@@ -1,4 +1,4 @@
-use bevy::prelude::{Component, Entity};
+use bevy::{math::Vec3A, prelude::*};
 use num_traits::{Bounded, Num, Signed};
 use std::{fmt::Debug, marker::PhantomData};
 use typenum::Unsigned;
@@ -14,7 +14,7 @@ pub trait SpatialPoint: Copy + Clone + PartialEq + Debug {
     type Scalar: Scalar;
 
     /// The vector type itself, for example [`Vec3`](bevy::prelude::Vec3)
-    type Vec;
+    type Vec: Send + Sync + IntoSpatialPoint;
 
     /// The dimension of this vector, like [`typenum::U2`] [`typenum::U3`]
     type Dimension: Unsigned;
@@ -42,10 +42,7 @@ pub trait SpatialPoint: Copy + Clone + PartialEq + Debug {
 }
 
 #[allow(clippy::module_name_repetitions)]
-pub trait IntoSpatialPoint
-where
-    Self: Sized + Copy,
-{
+pub trait IntoSpatialPoint: Send + Sync + Sized + Copy {
     type Point: SpatialPoint + From<(Entity, Self)> + Copy;
     fn into_spatial_point(self, e: Entity) -> Self::Point
     where
@@ -54,7 +51,6 @@ where
         (e, self).into()
     }
 }
-
 macro_rules! impl_spatial_point {
     ($pointname:ident, $bvec:ty, $unit:ty, $dim:ty, $diml:literal) => {
         /// Newtype over bevy/glam vectors, needed to allow implementing foreign spatial datastructure traits.
@@ -155,5 +151,46 @@ impl<Comp: TComp, P: IntoSpatialPoint> SpatialTracker<Comp, P> {
             c: PhantomData,
             coord,
         }
+    }
+}
+
+// Helper trait for automatic mode
+pub trait VecFromTransform: IntoSpatialPoint {
+    fn from_transform(t: &Transform) -> Self;
+}
+
+impl VecFromTransform for Vec2 {
+    fn from_transform(t: &Transform) -> Self {
+        t.translation.truncate()
+    }
+}
+impl VecFromTransform for Vec3 {
+    fn from_transform(t: &Transform) -> Self {
+        t.translation
+    }
+}
+impl VecFromTransform for Vec3A {
+    fn from_transform(t: &Transform) -> Self {
+        t.translation.into()
+    }
+}
+
+pub trait VecFromGlobalTransform: IntoSpatialPoint {
+    fn from_transform(t: &GlobalTransform) -> Self;
+}
+
+impl VecFromGlobalTransform for Vec2 {
+    fn from_transform(t: &GlobalTransform) -> Self {
+        t.translation().truncate()
+    }
+}
+impl VecFromGlobalTransform for Vec3 {
+    fn from_transform(t: &GlobalTransform) -> Self {
+        t.translation()
+    }
+}
+impl VecFromGlobalTransform for Vec3A {
+    fn from_transform(t: &GlobalTransform) -> Self {
+        t.translation().into()
     }
 }

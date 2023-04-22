@@ -4,11 +4,24 @@ use crate::{point::SpatialPoint, TComp};
 
 // todo: change Point to impl IntoPoint?
 pub trait UpdateSpatialAccess: SpatialAccess {
-    /// Rebuilds the underlying datastructure fully
-    fn rebuild(&mut self, data: impl Iterator<Item = Self::Point>) {
-        self.clear();
-        for p in data {
-            self.add(p);
+    /// Updates the underlying datastructure
+    ///
+    /// The boolean indicates if the point needs to be updated or is a existing point.
+    /// data should always include all points, even if they are not updated.
+    /// This is for datastructures like KDTree, which need to be fully rebuilt.
+    fn update(
+        &mut self,
+        data: impl Iterator<Item = (Self::Point, bool)>,
+        removed: impl Iterator<Item = Entity>,
+    ) {
+        for (p, changed) in data {
+            if changed {
+                self.remove_point(p);
+                self.add(p);
+            }
+        }
+        for e in removed {
+            self.remove_entity(e);
         }
     }
     /// Adds the point to the underlying datastructure.
@@ -21,7 +34,7 @@ pub trait UpdateSpatialAccess: SpatialAccess {
     fn clear(&mut self);
 }
 
-pub trait SpatialAccess {
+pub trait SpatialAccess: Send + Sync + 'static {
     type Point: SpatialPoint;
     type Comp: TComp;
     type ResultT;
