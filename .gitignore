@@ -1,3 +1,5 @@
 /target
 trace-*.json
 Cargo.lock
+rust-toolchain.toml
+.cargo/config.toml

@@ -2,7 +2,7 @@
 name = "bevy_spatial"
 description = "A crate for tracking bevy entities in spatial indices."
 documentation = "https://docs.rs/bevy_spatial"
-version = "0.5.0"
+version = "0.5.1"
 license = "MIT OR Apache-2.0"
 edition = "2021"
 keywords = ["gamedev", "bevy", "kdtree", "knn", "nearest-neighbour"]
@@ -57,7 +57,3 @@ required-features = ["kdtree"]
 [[example]]
 name = "movetowards"
 required-features = ["kdtree"]
-
-[package.metadata.docs.rs]
-all-features = true
-cargo-args = ["-Zunstable-options", "-Zrustdoc-scrape-examples=examples"]
