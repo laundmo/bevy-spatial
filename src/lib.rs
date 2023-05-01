@@ -5,16 +5,16 @@
 //!
 //! Quickstart using the `kdtree` feature:
 //! ```
-//! use bevy_spatial::{Spatial, KDTree3, SpatialAccess};
+//! use bevy_spatial::{AutomaticUpdate, KDTree3, TransformMode, SpatialAccess};
 //!
 //! #[derive(Component, Default)]
 //! struct TrackedByKDTree;
 //!
 //! fn main() {
 //!    App::new()
-//!        .add_plugin(AutomaticUpdate::new::<TrackedByKDTree>()
-//!                .spatial_structure(SpatialStructure::KDTree3)
-//!                .update_automatic_with(Duration::from_secs(1), TransformMode::Transform))
+//!        .add_plugin(AutomaticUpdate::<TrackedByKDTree>::new()
+//!             .with_frequency(Duration::from_secs_f32(0.3))
+//!             .with_transform(TransformMode::GlobalTransform))
 //!        .add_system(use_neighbour);
 //!    // ...
 //! }

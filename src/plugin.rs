@@ -32,7 +32,7 @@ pub enum SpatialStructure {
 ///
 ///
 /// ```
-/// #[derive(Component)]
+/// #[derive(Component, Default)]
 /// struct EntityMarker;
 ///
 /// App::new()

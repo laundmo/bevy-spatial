@@ -8,28 +8,24 @@ A bevy plugin to track your entities in spatial indices and query them.
 
 ![crates.io](https://img.shields.io/crates/v/bevy_spatial.svg)
 
-NOTE: You will need to enable at least one of the features.
-
 Currently implemented features:
 |Feature|Description|
 |-|-|
-|`kdtree`|KD-Tree for spatial lookups which is fully recreated. This is ideal for cases where most entities are moving.|
-
-Quickstart using the `kdtree` feature:
+|`kdtree` (default) |KD-Tree for spatial lookups which is fully recreated on update, but fast to recreate. Works well in most situations.|
 
 ```rust
-use bevy_spatial::{Spatial, KDTree3, SpatialAccess};
+use bevy_spatial::{AutomaticUpdate, KDTree3, TransformMode, SpatialAccess};
 
 #[derive(Component, Default)]
 struct TrackedByKDTree;
 
 fn main() {
-   App::new()
-       .add_plugin(AutomaticUpdate::new::<TrackedByKDTree>()
-               .spatial_structure(SpatialStructure::KDTree3)
-               .update_automatic_with(Duration::from_secs(1), TransformMode::Transform))
-       .add_system(use_neighbour);
-   // ...
+    App::new()
+        .add_plugin(AutomaticUpdate::<TrackedByKDTree>::new()
+            .with_frequency(Duration::from_secs_f32(0.3))
+            .with_transform(TransformMode::GlobalTransform))
+        .add_system(use_neighbour);
+    // ...
 }
 
 type NNTree = KDTree3<TrackedByKDTree>; // type alias for later
