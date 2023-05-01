@@ -1,86 +1,145 @@
-use std::marker::PhantomData;
+use std::{marker::PhantomData, time::Duration};
 
-use bevy::prelude::*;
+use bevy::{ecs::schedule::FreeSystemSet, prelude::*};
 
 use crate::{
-    common::run_if_elapsed,
-    resources_components::TimestepElapsed,
-    spatial_access::{delete, update_tree},
-    SpatialAccess,
+    automatic_systems::{AutoGT, AutoT, TransformMode},
+    kdtree::{KDTree2, KDTree3, KDTree3A},
+    timestep::{on_timer_changeable, TimestepLength},
+    TComp,
 };
 
-/// The core plugin struct which stores metadata for updating and recreating the choosen spatial index.
-///
-/// Generics:
-///   - `TComp` should be the marker Component which are tracked by this plugin.
-///   - `Access` is the type implementing SpatialAccess.
-///
-///
-/// You should use the following type aliases from their respective features instead.
-///
-/// | feature | Plugin |
-/// | ------- | ------ |
-/// | kdtree  | [KDTreePlugin2D](crate::KDTreePlugin2D) |
-/// | rstar   | [RTreePlugin2D](crate::RTreePlugin2D) or [RTreePlugin3D](crate::RTreePlugin3D) |
-pub struct SpatialPlugin<TComp, Access> {
-    pub component_type: PhantomData<TComp>,
-    pub spatial_access: PhantomData<Access>,
-    /// The minimum distance a entity has to move before its updated in the index. Increase this if small movements do not matter.
-    pub min_moved: f32,
-    /// The threshold of changes that have to happend within the same timestep or frame for the index to be completely recreated. After a certain point completely recreating can be more efficient.
-    pub recreate_after: usize,
-    /// Optional delay in seconds between tree updates. Increasing this means distances might be older than one frame.
-    pub timestep: Option<f32>,
+/// Default set for spatial datastructure updates. Can be overridden using [`AutomaticUpdate::with_set()`](crate::AutomaticUpdate)
+#[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone, Copy)]
+pub struct SpatialSet;
+
+/// Enum containing the different types of spatial datastructure compatible with [`AutomaticUpdate`]
+#[derive(Copy, Clone, Default)]
+pub enum SpatialStructure {
+    /// Corresponds to [`kdtree::KdTree2`](crate::kdtree::KDTree2)
+    KDTree2,
+    /// Corresponds to [`kdtree::KdTree3`](crate::kdtree::KDTree3)
+    #[default]
+    KDTree3,
+    /// Corresponds to [`kdtree::KdTree3A`](crate::kdtree::KDTree3A)
+    KDTree3A,
+    // Linear/naive (linfa?)
+    // Grid
+    // RStar
 }
 
-// apparently generic structs with PhantomData have issues with derive(Clone, Copy)
-// see https://stackoverflow.com/a/60907370
-impl<TComp, Access> Copy for SpatialPlugin<TComp, Access> {}
-
-impl<TComp, Access> Clone for SpatialPlugin<TComp, Access> {
-    fn clone(&self) -> Self {
-        *self
-    }
-}
-
-impl<TComp, Access> Default for SpatialPlugin<TComp, Access> {
-    fn default() -> Self {
-        SpatialPlugin {
-            component_type: PhantomData,
-            spatial_access: PhantomData,
-            recreate_after: 100,
-            min_moved: 1.0,
-            timestep: None,
-        }
-    }
-}
-
-impl<TComp, Access> Plugin for SpatialPlugin<TComp, Access>
+/// Plugin struct for setting up a spatial datastructure with automatic updating.
+///
+///
+/// ```
+/// #[derive(Component, Default)]
+/// struct EntityMarker;
+///
+/// App::new()
+///    .add_plugins(DefaultPlugins)
+///    .add_plugin(AutomaticUpdate::<EntityMarker>::new()
+///             .with_frequency(Duration::from_secs_f32(0.3))
+///             .with_spatial_ds(SpatialStructure::KDTree2)
+///             .with_transform(TransformMode::GlobalTransform)
+///     )
+///
+/// ```
+pub struct AutomaticUpdate<Comp, Set = SpatialSet>
 where
-    TComp: Component + Send + Sync + 'static,
-    Access: Resource + SpatialAccess + From<SpatialPlugin<TComp, Access>> + Send + Sync + 'static,
+    Set: FreeSystemSet,
 {
-    fn build(&self, app: &mut App) {
-        let tree_access = Access::from(*self);
+    pub(crate) comp: PhantomData<Comp>,
+    pub(crate) set: Set,
+    pub(crate) frequency: Duration,
+    pub(crate) transform: TransformMode,
+    pub(crate) spatial_ds: SpatialStructure,
+}
 
-        app.insert_resource(tree_access)
-            .add_startup_system_to_stage(StartupStage::PostStartup, update_tree::<Access>)
-            .add_system_to_stage(CoreStage::PostUpdate, delete::<Access>);
-
-        // decide whether to use the timestep
-        if let Some(step) = self.timestep {
-            app.insert_resource(TimestepElapsed::<TComp>(
-                Timer::from_seconds(step, TimerMode::Once),
-                PhantomData,
-            ));
-            app.add_system_set_to_stage(
-                CoreStage::PostUpdate,
-                SystemSet::new()
-                    .with_run_criteria(run_if_elapsed::<TComp>)
-                    .with_system(update_tree::<Access>),
-            );
-        } else {
-            app.add_system_to_stage(CoreStage::PostUpdate, update_tree::<Access>);
+impl<Comp, Set: FreeSystemSet> AutomaticUpdate<Comp, Set> {
+    /// Create a new [`AutomaticUpdate`] with defaults including default [`SystemSet`]: [`SpatialSet`].
+    #[must_use]
+    pub fn new() -> AutomaticUpdate<Comp, SpatialSet> {
+        AutomaticUpdate {
+            comp: PhantomData,
+            set: SpatialSet,
+            frequency: Duration::from_millis(50),
+            transform: TransformMode::Transform,
+            spatial_ds: default(),
         }
+    }
+
+    /// Change the Bevy [`FreeSystemSet`] in which this plugin will put its systems.
+    pub fn with_set<NewSet: FreeSystemSet + Copy>(
+        self,
+        set: NewSet,
+    ) -> AutomaticUpdate<Comp, NewSet> {
+        // Struct filling for differing types is experimental. Have to manually list each.
+        AutomaticUpdate::<Comp, NewSet> {
+            set,
+            comp: PhantomData,
+            frequency: self.frequency,
+            transform: self.transform,
+            spatial_ds: self.spatial_ds,
+        }
+    }
+
+    /// Change which spatial datastructure is used.
+    ///
+    /// expects one of:
+    /// - [`SpatialStructure::KDTree2`]
+    /// - [`SpatialStructure::KDTree3`] (default)
+    /// - [`SpatialStructure::KDTree3A`]
+    #[must_use]
+    pub fn with_spatial_ds(self, spatial_ds: SpatialStructure) -> Self {
+        Self { spatial_ds, ..self }
+    }
+
+    /// Change the update rate.
+    ///
+    /// Expects a [Duration] which is the delay between updates.
+    #[must_use]
+    pub fn with_frequency(self, frequency: Duration) -> Self {
+        Self { frequency, ..self }
+    }
+
+    /// Change which Transform is used to extrat coordinates from.
+    ///
+    /// - [`TransformMode::Transform`] (default)
+    /// - [`TransformMode::GlobalTransform`]
+    ///
+    /// Note: using [`TransformMode::GlobalTransform`] might cause double frame-delays
+    /// as Transform->GlobalTransform propagation happens in the
+    /// [`TransformPropagate`](bevy::transform::TransformSystem::TransformPropagate) [`SystemSet`] in [`PostUpdate`](bevy::app::CoreSet::PostUpdate).
+    /// You can order this plugins systems by modifying the default [`SpatialSet`]
+    /// or using your own [`FreeSystemSet`] by calling [`AutomaticUpdate::with_set`](Self::with_set)
+    #[must_use]
+    pub fn with_transform(self, transform: TransformMode) -> Self {
+        Self { transform, ..self }
+    }
+}
+
+impl<Comp: TComp, Set: FreeSystemSet + Copy> Plugin for AutomaticUpdate<Comp, Set> {
+    fn build(&self, app: &mut App) {
+        app.insert_resource(TimestepLength(self.frequency, PhantomData::<Comp>))
+            .configure_set(self.set.run_if(on_timer_changeable::<Comp>));
+
+        match self.spatial_ds {
+            SpatialStructure::KDTree2 => app.init_resource::<KDTree2<Comp>>(),
+            SpatialStructure::KDTree3 => app.init_resource::<KDTree3<Comp>>(),
+            SpatialStructure::KDTree3A => app.init_resource::<KDTree3A<Comp>>(),
+        };
+
+        match self.transform {
+            TransformMode::Transform => match self.spatial_ds {
+                SpatialStructure::KDTree2 => AutoT::<KDTree2<Comp>>::build(app, self.set),
+                SpatialStructure::KDTree3 => AutoT::<KDTree3<Comp>>::build(app, self.set),
+                SpatialStructure::KDTree3A => AutoT::<KDTree3A<Comp>>::build(app, self.set),
+            },
+            TransformMode::GlobalTransform => match self.spatial_ds {
+                SpatialStructure::KDTree2 => AutoGT::<KDTree2<Comp>>::build(app, self.set),
+                SpatialStructure::KDTree3 => AutoGT::<KDTree3<Comp>>::build(app, self.set),
+                SpatialStructure::KDTree3A => AutoGT::<KDTree3A<Comp>>::build(app, self.set),
+            },
+        };
     }
 }

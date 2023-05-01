@@ -1,146 +1,66 @@
-use bevy::{
-    ecs::{query::WorldQuery, system::Resource},
-    prelude::*,
-};
+use bevy::prelude::*;
 
-use crate::resources_components::MovementTracked;
+use crate::{point::SpatialPoint, TComp};
 
-#[derive(WorldQuery)]
-#[world_query(mutable)]
-pub struct TrackedQuery<'a, TComp>
-where
-    TComp: Component + Sync + Send + 'static,
-{
-    pub entity: Entity,
-    pub transform: &'a Transform,
-    pub change_tracker: ChangeTrackers<Transform>,
-    pub added_tracker: ChangeTrackers<TComp>,
+// todo: change Point to impl IntoPoint?
+#[allow(clippy::module_name_repetitions)]
+pub trait UpdateSpatialAccess: SpatialAccess {
+    /// Updates the underlying datastructure
+    ///
+    /// The boolean indicates if the point needs to be updated or is a existing point.
+    /// data should always include all points, even if they are not updated.
+    /// This is for datastructures like ``KDTree``, which need to be fully rebuilt.
+    fn update(
+        &mut self,
+        data: impl Iterator<Item = (Self::Point, bool)>,
+        removed: impl Iterator<Item = Entity>,
+    ) {
+        for (p, changed) in data {
+            if changed {
+                self.remove_point(p);
+                self.add(p);
+            }
+        }
+        for e in removed {
+            self.remove_entity(e);
+        }
+    }
+    /// Adds the point to the underlying datastructure.
+    fn add(&mut self, point: Self::Point);
+    /// Remove the point by coordinate + entity from the underlying datastructure.
+    fn remove_point(&mut self, point: Self::Point) -> bool;
+    /// Remove the point by entity from the underlying datastructure.
+    fn remove_entity(&mut self, entity: Entity) -> bool;
+    /// Clear the underlying datastructure, removing all points it contains.
+    fn clear(&mut self);
 }
 
-pub trait SpatialAccess
-where
-    <Self as SpatialAccess>::TComp: Component + Sync + 'static,
-{
-    type TComp;
-
-    /// Update the data structure by adding:
-    /// - new entities
-    /// - entities that moved more than `self.get_min_dist()`
-    ///
-    /// If the number of new/updated entities is larger than `self.get_recreate_after()`,
-    /// the whole data structure gets re-created from scratch.
-    ///
-    /// Used internally and called from a system.
-    fn update_tree(&mut self, mut query: Query<TrackedQuery<Self::TComp>, With<Self::TComp>>) {
-        // get added entities, and add a MovementTracker
-        let added_dist =
-            info_span!("compute_added_entities", name = "compute_added_entities").entered();
-        let added: Vec<_> = query
-            .iter()
-            .filter(|e| e.added_tracker.is_added())
-            .map(|e| (e.transform.translation, e.entity))
-            .collect();
-        added_dist.exit();
-
-        // get already existing entities that moved a significant distance, and update their
-        // last position in the `movement_tracker`
-        let move_dist = info_span!(
-            "compute_moved_significant_distance",
-            name = "compute_moved_significant_distance"
-        )
-        .entered();
-        let moved: Vec<_> = query
-            .iter_mut()
-            .filter(|e| {
-                // only consider existing entities that moved
-                if e.change_tracker.is_changed() && !e.added_tracker.is_added() {
-                    // optimization if distance deltas do not matter
-                    if self.get_min_dist() <= 0.0 {
-                        return true;
-                    }
-                    // safe to unwrap because we only deal with entities that have been previously added
-                    let last_pos = self.get_last_pos(e.entity).unwrap();
-                    return self.distance_squared(e.transform.translation, *last_pos)
-                        >= self.get_min_dist().powi(2);
-                }
-                false
-            })
-            .map(|e| (e.transform.translation, e.entity))
-            .collect();
-        move_dist.exit();
-
-        if added.len() + moved.len() >= self.get_recreate_after() {
-            let recreate = info_span!("recreate_with_all", name = "recreate_with_all").entered();
-            let all: Vec<(Vec3, Entity)> = query
-                .iter()
-                .map(|e| (e.transform.translation, e.entity))
-                .collect();
-
-            self.recreate(all);
-            recreate.exit();
-        } else {
-            let update = info_span!("partial_update", name = "partial_update").entered();
-            added
-                .into_iter()
-                .for_each(|(curpos, entity)| self.add_point((curpos, entity)));
-            moved.into_iter().for_each(|(curpos, entity)| {
-                if self.remove_entity(entity) {
-                    self.add_point((curpos, entity));
-                }
-            });
-            update.exit();
-        }
-    }
-
-    /// Delete despawned entities from datastructure. Used internally and called from a system.
-    fn delete(&mut self, removed: RemovedComponents<Self::TComp>) {
-        for entity in removed.iter() {
-            self.remove_entity(entity);
-        }
-    }
-
-    /// Get the squared distance using the calculation that implementation uses.
-    /// Mainly a trait method due to 2d structures using Vec3 but ignoring the 3rd dimension for distance calculations.
-    fn distance_squared(&self, loc_a: Vec3, loc_b: Vec3) -> f32;
+/// Trait for accessing point-based spatial datastructures.
+pub trait SpatialAccess: Send + Sync + 'static {
+    /// The point type, can be anything implementing [`SpatialPoint`].
+    type Point: SpatialPoint;
+    /// The marker component type marking the entities whos points are stored, used for accessing the component in trait bounds.
+    type Comp: TComp;
+    /// The type of a single query result.
+    type ResultT;
 
     /// Get the nearest neighbour to `loc`.
     /// Be aware that that distance to the returned point will be zero if `loc` is part of the datastructure.
-    fn nearest_neighbour(&self, loc: Vec3) -> Option<(Vec3, Entity)>;
+    fn nearest_neighbour(&self, loc: <Self::Point as SpatialPoint>::Vec) -> Option<Self::ResultT>;
 
     /// Return the k nearest neighbours to `loc`.
-    fn k_nearest_neighbour(&self, loc: Vec3, k: usize) -> Vec<(Vec3, Entity)>;
+    fn k_nearest_neighbour(
+        &self,
+        loc: <Self::Point as SpatialPoint>::Vec,
+        k: usize,
+    ) -> Vec<Self::ResultT>;
+
     /// Return all points which are within the specified distance.
-    fn within_distance(&self, loc: Vec3, distance: f32) -> Vec<(Vec3, Entity)>;
-    /// Recreate the underlying datastructure with `all` points.
-    fn recreate(&mut self, all: Vec<(Vec3, Entity)>);
-    /// Adds the point to the underlying datastructure.
-    fn add_point(&mut self, point: (Vec3, Entity));
-    /// Remove the point by coordinate + entity from the underlying datastructure.
-    fn remove_point(&mut self, point: (Vec3, Entity)) -> bool;
-    /// Remove the point by entity from the underlying datastructure.
-    fn remove_entity(&mut self, entity: Entity) -> bool;
-    /// Get the size of the underlying datastructure. Should match the number of tracked elements.
-    fn size(&self) -> usize;
-    /// Get the minimum distance that a entity has to travel before being updated in the datastructure.
-    fn get_min_dist(&self) -> f32;
-    /// Get the amount of moved/changed/added entities after which to perform a full recreate.
-    fn get_recreate_after(&self) -> usize;
-    /// Get last tracked position of an entity
-    fn get_last_pos(&self, entity: Entity) -> Option<&Vec3>;
+    fn within_distance(
+        &self,
+        loc: <Self::Point as SpatialPoint>::Vec,
+        distance: <Self::Point as SpatialPoint>::Scalar,
+    ) -> Vec<Self::ResultT>;
 }
 
-pub fn update_tree<SAcc>(
-    mut acc: ResMut<SAcc>,
-    query: Query<TrackedQuery<SAcc::TComp>, With<SAcc::TComp>>,
-) where
-    SAcc: SpatialAccess + Resource + Sync,
-{
-    acc.update_tree(query);
-}
-
-pub fn delete<SAcc>(mut acc: ResMut<SAcc>, removed: RemovedComponents<SAcc::TComp>)
-where
-    SAcc: SpatialAccess + Resource + Sync,
-{
-    acc.delete(removed);
-}
+// TODO: SpatialAABBAccess trait definition - should it be separate from SpatialAccess or depend on it?

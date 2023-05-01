@@ -2,37 +2,44 @@
 name = "bevy_spatial"
 description = "A crate for tracking bevy entities in spatial indices."
 documentation = "https://docs.rs/bevy_spatial"
-version = "0.4.0"
+version = "0.5.0"
 license = "MIT OR Apache-2.0"
 edition = "2021"
-keywords = ["gamedev", "bevy", "spatial", "kdtree", "rtree"]
+keywords = [
+    "gamedev",
+    "bevy",
+    "spatial",
+    "kdtree",
+    "rtree",
+    "knn",
+    "neighbours",
+    "nearest",
+    "nearest-neighbour",
+]
 repository = "https://github.com/laundmo/bevy-spatial"
 readme = "README.md"
 authors = ["laundmo"]
 
 [dependencies]
-bevy = { version = "0.9", default-features = false }
-# R*-Tree dependencies
-rstar = { version = "0.9.3", optional = true }
+bevy = { version = "0.10", default-features = false }
 # KD-Tree dependencies
-kd-tree = { version = "0.4.1", optional = true, features = ["rayon"] }
-typenum = { version = "1.15.0", optional = true }
-num-traits = { version = "0.2.15", optional = true }
+kd-tree = { version = "0.5.1", optional = true, features = ["rayon"] }
+typenum = { version = "1.15.0" }
+num-traits = { version = "0.2.15" }
 
 
 [features]
-default = []
-rstar = ["dep:rstar"]
-kdtree = ["dep:kd-tree", "dep:typenum", "dep:num-traits"]
+default = ["kdtree"]
+kdtree = ["dep:kd-tree"]
 
 [dev-dependencies]
-bevy = { version = "0.9" }
-# bevy-aabb-instancing = "0.3.0"
-wasm-server-runner = "0.3.0"
+bevy = { version = "0.10" }
+rand = "0.8.5"
+wasm-server-runner = "0.4.0"
 
 # without the rayon feature 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-kd-tree = { version = "0.4.1", optional = true }
+kd-tree = { version = "0.5.1", optional = true }
 
 [profile.dev]
 opt-level = 1
@@ -44,13 +51,14 @@ opt-level = 3
 inherits = "release"
 debug = true
 
+
 [[example]]
 name = "distance2d"
 required-features = ["kdtree"]
 
 [[example]]
 name = "distance3d"
-required-features = ["rstar"]
+required-features = ["kdtree"]
 
 [[example]]
 name = "modify_timestep"
@@ -58,7 +66,7 @@ required-features = ["kdtree"]
 
 [[example]]
 name = "movetowards"
-required-features = ["rstar"]
+required-features = ["kdtree"]
 
 [package.metadata.docs.rs]
 all-features = true

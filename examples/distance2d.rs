@@ -1,12 +1,15 @@
+use std::time::Duration;
+
 use bevy::{
     diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
     math::Vec3Swizzles,
     prelude::*,
+    window::PrimaryWindow,
 };
-use bevy_spatial::{KDTreeAccess2D, KDTreePlugin2D, SpatialAccess};
-
+use bevy_spatial::{kdtree::KDTree2, SpatialAccess};
+use bevy_spatial::{AutomaticUpdate, SpatialStructure};
 // marker for entities tracked by the KDTree
-#[derive(Component)]
+#[derive(Component, Default)]
 struct NearestNeighbourComponent;
 
 // marker for the "cursor" entity
@@ -17,7 +20,11 @@ fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         // Add the plugin, which takes the tracked component as a generic.
-        .add_plugin(KDTreePlugin2D::<NearestNeighbourComponent> { ..default() })
+        .add_plugin(
+            AutomaticUpdate::<NearestNeighbourComponent>::new()
+                .with_spatial_ds(SpatialStructure::KDTree2)
+                .with_frequency(Duration::from_millis(1)),
+        )
         .add_plugin(LogDiagnosticsPlugin::default())
         .add_plugin(FrameTimeDiagnosticsPlugin::default())
         .add_startup_system(setup)
@@ -30,10 +37,10 @@ fn main() {
 }
 
 // type alias for easier usage later
-type NNTree = KDTreeAccess2D<NearestNeighbourComponent>;
+type NNTree = KDTree2<NearestNeighbourComponent>;
 
 fn setup(mut commands: Commands) {
-    commands.spawn_bundle(Camera2dBundle::default());
+    commands.spawn(Camera2dBundle::default());
     commands.spawn((
         Cursor,
         SpriteBundle {
@@ -73,39 +80,39 @@ fn setup(mut commands: Commands) {
 
 fn mouse(
     mut commands: Commands,
-    windows: Res<Windows>,
+    window: Query<&Window, With<PrimaryWindow>>,
     treeaccess: Res<NNTree>,
     mut query: Query<&mut Transform, With<Cursor>>,
     ms_buttons: Res<Input<MouseButton>>,
 ) {
     let use_mouse = ms_buttons.pressed(MouseButton::Left);
-    let win = windows.get_primary().unwrap();
+    let win = window.get_single().unwrap();
     if let Some(mut pos) = win.cursor_position() {
         pos.x -= win.width() / 2.0;
         pos.y -= win.height() / 2.0;
         let mut transform = query.single_mut();
-        if let Some((_pos, entity)) = treeaccess.nearest_neighbour(pos.extend(0.0)) {
+        if let Some((_pos, entity)) = treeaccess.nearest_neighbour(pos) {
             if use_mouse {
                 transform.translation = pos.extend(1.0); // I don't really know what this is here for
             } else {
-                commands.entity(entity).despawn();
+                commands.entity(entity.unwrap()).despawn();
             }
         }
     }
 }
 
 fn color(
-    windows: Res<Windows>,
+    window: Query<&Window, With<PrimaryWindow>>,
     treeaccess: Res<NNTree>,
     mut query: Query<&mut Sprite, With<NearestNeighbourComponent>>,
 ) {
-    let win = windows.get_primary().unwrap();
+    let win = window.get_single().unwrap();
     if let Some(mut pos) = win.cursor_position() {
         pos.x -= win.width() / 2.0;
         pos.y -= win.height() / 2.0;
 
-        for (_, entity) in treeaccess.within_distance(pos.extend(0.0), 50.0) {
-            if let Ok(mut sprite) = query.get_mut(entity) {
+        for (_, entity) in treeaccess.within_distance(pos, 50.0) {
+            if let Ok(mut sprite) = query.get_mut(entity.unwrap()) {
                 sprite.color = Color::BLACK;
             }
         }
@@ -126,10 +133,10 @@ fn movement(mut query: Query<&mut Transform, With<NearestNeighbourComponent>>) {
 }
 
 fn collide_wall(
-    windows: Res<Windows>,
+    window: Query<&Window, With<PrimaryWindow>>,
     mut query: Query<&mut Transform, With<NearestNeighbourComponent>>,
 ) {
-    let win = windows.get_primary().unwrap();
+    let win = window.get_single().unwrap();
 
     let w = win.width() / 2.0;
     let h = win.height() / 2.0;

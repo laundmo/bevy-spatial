@@ -1,8 +1,9 @@
 use bevy::{
     diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
     prelude::*,
+    window::PrimaryWindow,
 };
-use bevy_spatial::{RTreeAccess3D, RTreePlugin3D, SpatialAccess};
+use bevy_spatial::{kdtree::KDTree3, AutomaticUpdate, SpatialAccess};
 
 #[derive(Component)]
 struct NearestNeighbourComponent;
@@ -13,7 +14,7 @@ struct Cursor;
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-        .add_plugin(RTreePlugin3D::<NearestNeighbourComponent> { ..default() })
+        .add_plugin(AutomaticUpdate::<NearestNeighbourComponent>::new())
         .add_plugin(LogDiagnosticsPlugin::default())
         .add_plugin(FrameTimeDiagnosticsPlugin::default())
         .add_startup_system(setup)
@@ -30,7 +31,7 @@ struct MaterialHandles {
     blue: Handle<StandardMaterial>,
 }
 
-type NNTree = RTreeAccess3D<NearestNeighbourComponent>;
+type NNTree = KDTree3<NearestNeighbourComponent>;
 
 fn setup(
     mut commands: Commands,
@@ -80,29 +81,33 @@ fn setup(
     }
 }
 
-fn mouse(windows: Res<Windows>, mut query: Query<&mut Transform, With<Cursor>>) {
-    let win = windows.get_primary().unwrap();
-    if let Some(mut pos) = win.cursor_position() {
-        pos.x -= win.width() / 2.0;
-        pos.y -= win.height() / 2.0;
+fn mouse(
+    window: Query<&Window, With<PrimaryWindow>>,
+    mut query: Query<&mut Transform, With<Cursor>>,
+) {
+    let window = window.single();
+    if let Some(mut pos) = window.cursor_position() {
+        pos.x -= window.width() / 2.0;
+        pos.y -= window.height() / 2.0;
         let mut transform = query.single_mut();
         transform.translation = pos.extend(0.0);
     }
 }
 
 fn color(
-    windows: Res<Windows>,
+    window: Query<&Window, With<PrimaryWindow>>,
+
     treeaccess: Res<NNTree>,
     mut query: Query<&mut Handle<StandardMaterial>, With<NearestNeighbourComponent>>,
     colors: Res<MaterialHandles>,
 ) {
-    let win = windows.get_primary().unwrap();
-    if let Some(mut pos) = win.cursor_position() {
-        pos.x -= win.width() / 2.0;
-        pos.y -= win.height() / 2.0;
+    let window = window.single();
+    if let Some(mut pos) = window.cursor_position() {
+        pos.x -= window.width() / 2.0;
+        pos.y -= window.height() / 2.0;
 
         for (_, entity) in treeaccess.within_distance(pos.extend(0.0), 100.0) {
-            if let Ok(mut handle) = query.get_mut(entity) {
+            if let Ok(mut handle) = query.get_mut(entity.expect("No entity")) {
                 *handle = colors.black.clone();
             }
         }
