@@ -5,17 +5,7 @@ documentation = "https://docs.rs/bevy_spatial"
 version = "0.5.0"
 license = "MIT OR Apache-2.0"
 edition = "2021"
-keywords = [
-    "gamedev",
-    "bevy",
-    "spatial",
-    "kdtree",
-    "rtree",
-    "knn",
-    "neighbours",
-    "nearest",
-    "nearest-neighbour",
-]
+keywords = ["gamedev", "bevy", "kdtree", "knn", "nearest-neighbour"]
 repository = "https://github.com/laundmo/bevy-spatial"
 readme = "README.md"
 authors = ["laundmo"]
