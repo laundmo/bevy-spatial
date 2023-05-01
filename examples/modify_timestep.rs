@@ -1,7 +1,9 @@
 use std::time::Duration;
 
 use bevy::prelude::*;
-use bevy_spatial::{SpatialBuilder, TimestepLength};
+use bevy_spatial::{
+    kdtree::KDTree2, AutomaticUpdate, SpatialAccess, SpatialStructure, TimestepLength,
+};
 
 #[derive(Component, Default)]
 struct NearestNeighbour;
@@ -13,8 +15,9 @@ fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .add_plugin(
-            SpatialBuilder::new::<NearestNeighbour>()
-                .automatic_with_timestep(Duration::from_secs_f32(0.3)),
+            AutomaticUpdate::<NearestNeighbour>::new()
+                .with_frequency(Duration::from_secs_f32(0.3))
+                .with_spatial_ds(SpatialStructure::KDTree2),
         )
         .add_startup_system(setup)
         .add_system(move_to)
@@ -23,7 +26,7 @@ fn main() {
         .run();
 }
 
-type NNTree = KDTreeAccess2D<NearestNeighbour>;
+type NNTree = KDTree2<NearestNeighbour>;
 
 fn setup(mut commands: Commands) {
     commands.spawn(Camera2dBundle::default());
@@ -79,13 +82,14 @@ fn move_to(
     mut query: Query<&mut Transform, With<Chaser>>,
 ) {
     for mut transform in &mut query {
-        if let Some(nearest) = treeaccess.nearest_neighbour(transform.translation) {
-            let towards = nearest.0 - transform.translation;
+        if let Some(nearest) = treeaccess.nearest_neighbour(transform.translation.truncate()) {
+            let towards = nearest.0.extend(0.0) - transform.translation;
             transform.translation += towards.normalize() * time.delta_seconds() * 350.0;
         }
     }
 }
 
+/// Change the timestep for
 fn mouseclick(
     mouse_input: Res<Input<MouseButton>>,
     mut step: ResMut<TimestepLength<NearestNeighbour>>,

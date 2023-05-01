@@ -1,13 +1,25 @@
+//! The different point Traits and Types used by ``bevy_spatial``
+//!
+//! - [`Scalar`] is a Trait based on [`num_traits`] which is implemented for all numeric types used in Points.
+//! - [`SpatialPoint`] is a Trait that represents a point in space and the Entity it was created from.
+//!   It defines some, common methods needed while working with these points in different spatial datastructures.
+//! - [`IntoSpatialPoint`] is a Trait which is implemented for vector coordinate types for which a corresponding Point type exists.
+//!   Needs a [`Entity`] to include in the Point type.
+//! - [`VecFromTransform`] and [`VecFromGlobalTransform`] used to extract the translation from the corresponding Transform.
+//!   Used for automatically updating the spatial datastructure.
+
 use bevy::{math::Vec3A, prelude::*};
 use num_traits::{Bounded, Num, Signed};
-use std::{fmt::Debug, marker::PhantomData};
+use std::fmt::Debug;
 use typenum::Unsigned;
 
-use crate::TComp;
+/// Trait implemented for all numeric types used in Points.
 pub trait Scalar: Bounded + Num + Clone + Copy + Signed + PartialOrd + Debug {}
 impl<T> Scalar for T where T: Bounded + Num + Clone + Copy + Signed + PartialOrd + Debug {}
 
-// Matches closely what rstar and kdtree use
+/// Represents a point in space and the Entity it was created from.
+///
+/// Implements a bunch of common methods needed while working with these points in different spatial datastructures.
 #[allow(clippy::module_name_repetitions)]
 pub trait SpatialPoint: Copy + Clone + PartialEq + Debug {
     /// The Scalar type of a vector, example: [`f32`], [`f64`]
@@ -41,9 +53,14 @@ pub trait SpatialPoint: Copy + Clone + PartialEq + Debug {
     fn vec(&self) -> Self::Vec;
 }
 
+/// Trait implemented for vector coordinate types for which a corresponding Point type exists.
+/// Used to convert from the vector coordinate types to the corresponding Point type by providing a Entity
 #[allow(clippy::module_name_repetitions)]
 pub trait IntoSpatialPoint: Send + Sync + Sized + Copy {
+    /// The resulting point type, for example [`Point3`]
     type Point: SpatialPoint + From<(Entity, Self)> + Copy;
+
+    /// Converts from the implementing type to the point type with its Entity filled.
     fn into_spatial_point(self, e: Entity) -> Self::Point
     where
         Self::Point: From<(Entity, Self)>,
@@ -56,7 +73,9 @@ macro_rules! impl_spatial_point {
         /// Newtype over bevy/glam vectors, needed to allow implementing foreign spatial datastructure traits.
         #[derive(Clone, Copy, Debug, Default, PartialEq)]
         pub struct $pointname {
+            /// The vector of this Point
             pub vec: $bvec,
+            /// The Entity associated with this Point
             pub entity: Option<Entity>,
         }
 
@@ -139,23 +158,10 @@ impl_spatial_point!(Point3A, bevy::math::Vec3A, f32, typenum::consts::U3, 3);
 impl_spatial_point!(PointD2, bevy::math::DVec2, f64, typenum::consts::U2, 2);
 impl_spatial_point!(PointD3, bevy::math::DVec3, f64, typenum::consts::U3, 3);
 
-#[derive(Copy, Clone, Debug, Component)]
-pub struct SpatialTracker<Comp: TComp, P: IntoSpatialPoint> {
-    c: PhantomData<Comp>,
-    pub coord: P,
-}
-
-impl<Comp: TComp, P: IntoSpatialPoint> SpatialTracker<Comp, P> {
-    pub fn new(coord: P) -> Self {
-        Self {
-            c: PhantomData,
-            coord,
-        }
-    }
-}
-
-// Helper trait for automatic mode
+/// Helper trait for extracting the translation of a [`Transform`] to a specific vector type
+/// Used for automatically updating the spatial datastructure.
 pub trait VecFromTransform: IntoSpatialPoint {
+    /// Create this vector type from a [`Transform`]
     fn from_transform(t: &Transform) -> Self;
 }
 
@@ -175,7 +181,11 @@ impl VecFromTransform for Vec3A {
     }
 }
 
+/// Helper trait for extracting the translation of a [`GlobalTransform`] to a specific vector type
+/// Used for automatically updating the spatial datastructure.
+
 pub trait VecFromGlobalTransform: IntoSpatialPoint {
+    /// Create this vector type from a [`GlobalTransform`]
     fn from_transform(t: &GlobalTransform) -> Self;
 }
 

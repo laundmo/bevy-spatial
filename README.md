@@ -14,29 +14,32 @@ Currently implemented features:
 |Feature|Description|
 |-|-|
 |`kdtree`|KD-Tree for spatial lookups which is fully recreated. This is ideal for cases where most entities are moving.|
-|`rstar`|R\*-Tree for spatial lookups which is updated or recreated based on a threshold of changed entities. Ideal when most entities are static. |
 
 Quickstart using the `kdtree` feature:
 
 ```rust
-use bevy_spatial::{KDTreeAccess2D, KDTreePlugin2D, SpatialAccess};
+use bevy_spatial::{Spatial, KDTree3, SpatialAccess};
 
-#[derive(Component)]
+#[derive(Component, Default)]
 struct TrackedByKDTree;
 
 fn main() {
    App::new()
-       .add_plugin(KDTreePlugin2D::<TrackedByKDTree> { ..default() })
+       .add_plugin(AutomaticUpdate::new::<TrackedByKDTree>()
+               .spatial_structure(SpatialStructure::KDTree3)
+               .update_automatic_with(Duration::from_secs(1), TransformMode::Transform))
        .add_system(use_neighbour);
    // ...
 }
 
-type NNTree = KDTreeAccess2D<TrackedByKDTree>; // type alias for brevity
+type NNTree = KDTree3<TrackedByKDTree>; // type alias for later
+
+// spawn some entities with the TrackedByKDTree component
 
 fn use_neighbour(tree: Res<NNTree>){
-    if let Some((pos, entity)) = tree.nearest_neighbour(Vec2::ZERO) {
+    if let Some((pos, entity)) = tree.nearest_neighbour(Vec3::ZERO) {
         // pos: Vec3
-        // do something with the nearest entity here, most likley you will want a `query.get(entity)` call
+        // do something with the nearest entity here
     }
 }
 ```
@@ -47,19 +50,10 @@ For more details on usage see [Examples](https://github.com/laundmo/bevy-spatial
 
 | bevy | bevy_spatial |
 | ---- | ------------ |
+| 0.10 | 0.5.0        |
 | 0.9  | 0.4.0        |
 | 0.8  | 0.3.0        |
 | 0.8  | 0.2.1        |
 | 0.7  | 0.1          |
 
 wasm caveats: the rayon acceleration for kdtree is disabled on wasm, making it a bit slower.
-
-## TODOs and Ideas
-
-- benchmarks
-- documentation
-
-- Versions of the SpatialAccess functions which return Iterators instead of Vecs
-
-- a feature for `linfa_nn` to use their abstractions over kdtree/balltree linear search
-- a feature for https://github.com/InstantDomain/instant-distance

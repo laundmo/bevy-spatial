@@ -1,3 +1,6 @@
+#![warn(missing_docs)]
+#![deny(clippy::pedantic)]
+
 //! A bevy plugin to track your entities in spatial indices and query them.
 //!
 //! Quickstart using the `kdtree` feature:
@@ -9,7 +12,7 @@
 //!
 //! fn main() {
 //!    App::new()
-//!        .add_plugin(SpatialPlugin::new::<TrackedByKDTree>()
+//!        .add_plugin(AutomaticUpdate::new::<TrackedByKDTree>()
 //!                .spatial_structure(SpatialStructure::KDTree3)
 //!                .update_automatic_with(Duration::from_secs(1), TransformMode::Transform))
 //!        .add_system(use_neighbour);
@@ -30,7 +33,6 @@
 //!
 //! For more details see [Examples](https://github.com/laundmo/bevy-spatial/tree/main/examples)
 
-#[deny(clippy::pedantic)]
 pub mod point;
 mod spatial_access;
 pub use self::spatial_access::SpatialAccess;
@@ -47,5 +49,6 @@ pub use plugin::{SpatialStructure, *};
 mod automatic_systems;
 pub use automatic_systems::TransformMode;
 
+/// automatically implemented trait for all components which can be used as markers for automatic updates?
 pub trait TComp: Component + Send + Sync + 'static {}
 impl<T> TComp for T where T: Component + Send + Sync + 'static {}

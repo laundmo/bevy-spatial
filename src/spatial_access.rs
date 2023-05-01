@@ -3,12 +3,13 @@ use bevy::prelude::*;
 use crate::{point::SpatialPoint, TComp};
 
 // todo: change Point to impl IntoPoint?
+#[allow(clippy::module_name_repetitions)]
 pub trait UpdateSpatialAccess: SpatialAccess {
     /// Updates the underlying datastructure
     ///
     /// The boolean indicates if the point needs to be updated or is a existing point.
     /// data should always include all points, even if they are not updated.
-    /// This is for datastructures like KDTree, which need to be fully rebuilt.
+    /// This is for datastructures like ``KDTree``, which need to be fully rebuilt.
     fn update(
         &mut self,
         data: impl Iterator<Item = (Self::Point, bool)>,
@@ -34,29 +35,32 @@ pub trait UpdateSpatialAccess: SpatialAccess {
     fn clear(&mut self);
 }
 
+/// Trait for accessing point-based spatial datastructures.
 pub trait SpatialAccess: Send + Sync + 'static {
+    /// The point type, can be anything implementing [`SpatialPoint`].
     type Point: SpatialPoint;
+    /// The marker component type marking the entities whos points are stored, used for accessing the component in trait bounds.
     type Comp: TComp;
+    /// The type of a single query result.
     type ResultT;
 
     /// Get the nearest neighbour to `loc`.
     /// Be aware that that distance to the returned point will be zero if `loc` is part of the datastructure.
-    fn nearest_neighbour(
-        &self,
-        loc: <Self::Point as SpatialPoint>::Vec,
-    ) -> Option<(<Self::Point as SpatialPoint>::Vec, Option<Entity>)>;
+    fn nearest_neighbour(&self, loc: <Self::Point as SpatialPoint>::Vec) -> Option<Self::ResultT>;
+
     /// Return the k nearest neighbours to `loc`.
     fn k_nearest_neighbour(
         &self,
         loc: <Self::Point as SpatialPoint>::Vec,
         k: usize,
-    ) -> Self::ResultT;
+    ) -> Vec<Self::ResultT>;
+
     /// Return all points which are within the specified distance.
     fn within_distance(
         &self,
         loc: <Self::Point as SpatialPoint>::Vec,
         distance: <Self::Point as SpatialPoint>::Scalar,
-    ) -> Self::ResultT;
+    ) -> Vec<Self::ResultT>;
 }
 
 // TODO: SpatialAABBAccess trait definition - should it be separate from SpatialAccess or depend on it?

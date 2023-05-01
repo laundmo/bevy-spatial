@@ -4,7 +4,7 @@ unmaintained = "deny"
 notice = "deny"
 unsound = "deny"
 ignore = [
-    "RUSTSEC-2020-0056", 
+    "RUSTSEC-2020-0056", # from xml-rs 0.8.4 - unmaintained - it's used in a build script of winit
 ]
 
 [licenses]

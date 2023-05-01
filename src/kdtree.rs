@@ -1,3 +1,5 @@
+//! implementations to use [`kd_tree`] trees as a spatial datastructure in ``bevy_spatial``.
+
 use bevy::prelude::*;
 use kd_tree::{KdPoint, KdTree as BaseKdTree, KdTreeN};
 
@@ -23,10 +25,12 @@ macro_rules! kdtree_impl {
             }
         }
 
+        /// Resource for storing a ``KdTree``
         #[derive(Resource)]
         pub struct $treename<Comp> {
+            /// The KdTree
             pub tree: BaseKdTree<$pt>,
-            pub component_type: PhantomData<Comp>,
+            component_type: PhantomData<Comp>,
         }
 
         impl<Comp> Default for $treename<Comp> {
@@ -45,13 +49,10 @@ macro_rules! kdtree_impl {
             type Point = $pt;
 
             type Comp = Comp;
-            type ResultT = Vec<(<$pt as SpatialPoint>::Vec, Option<Entity>)>;
+            type ResultT = (<$pt as SpatialPoint>::Vec, Option<Entity>);
 
             /// Get the nearest neighbour to a position.
-            fn nearest_neighbour(
-                &self,
-                loc: <$pt as SpatialPoint>::Vec,
-            ) -> Option<(<$pt as SpatialPoint>::Vec, Option<Entity>)> {
+            fn nearest_neighbour(&self, loc: <$pt as SpatialPoint>::Vec) -> Option<Self::ResultT> {
                 let p: $pt = loc.into();
                 let res = self.tree.nearest(&p);
                 res.map(|point| (point.item.vec(), point.item.entity()))
@@ -64,7 +65,7 @@ macro_rules! kdtree_impl {
                 &self,
                 loc: <$pt as SpatialPoint>::Vec,
                 k: usize,
-            ) -> Self::ResultT {
+            ) -> Vec<Self::ResultT> {
                 let _span = info_span!("k-nearest").entered();
                 let p: $pt = loc.into();
 
@@ -80,7 +81,7 @@ macro_rules! kdtree_impl {
                 &self,
                 loc: <$pt as SpatialPoint>::Vec,
                 distance: <$pt as SpatialPoint>::Scalar,
-            ) -> Self::ResultT {
+            ) -> Vec<Self::ResultT> {
                 let _span = info_span!("within-distance").entered();
 
                 let distance: <$pt as KdPoint>::Scalar = distance.into();
@@ -104,8 +105,13 @@ macro_rules! kdtree_impl {
                 data: impl Iterator<Item = (Self::Point, bool)>,
                 _: impl Iterator<Item = Entity>,
             ) {
-                self.tree =
+                #[cfg(not(target_arch = "wasm32"))]
+                let tree =
+                    KdTreeN::par_build_by_ordered_float(data.map(|(p, _)| p).collect::<Vec<_>>());
+                #[cfg(target_arch = "wasm32")]
+                let tree =
                     KdTreeN::build_by_ordered_float(data.map(|(p, _)| p).collect::<Vec<_>>());
+                self.tree = tree;
             }
 
             fn add(&mut self, _: Self::Point) {}

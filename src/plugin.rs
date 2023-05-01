@@ -9,34 +9,42 @@ use crate::{
     TComp,
 };
 
-/// Default set for spatial datastructure updates. Can be overridden using [`SpatialPlugin::in_set`]
+/// Default set for spatial datastructure updates. Can be overridden using [`AutomaticUpdate::with_set()`](crate::AutomaticUpdate)
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone, Copy)]
 pub struct SpatialSet;
 
+/// Enum containing the different types of spatial datastructure compatible with [`AutomaticUpdate`]
 #[derive(Copy, Clone, Default)]
 pub enum SpatialStructure {
-    /// Corresponds to [`KdTree2`](crate::kdtree::KDTree2)
+    /// Corresponds to [`kdtree::KdTree2`](crate::kdtree::KDTree2)
     KDTree2,
-    /// Corresponds to [`KdTree3`](crate::kdtree::KDTree3)
+    /// Corresponds to [`kdtree::KdTree3`](crate::kdtree::KDTree3)
     #[default]
     KDTree3,
-    /// Corresponds to [`KdTree3A`](crate::kdtree::KDTree3A)
+    /// Corresponds to [`kdtree::KdTree3A`](crate::kdtree::KDTree3A)
     KDTree3A,
     // Linear/naive (linfa?)
     // Grid
     // RStar
 }
 
-pub struct AutomaticUpdate<Comp>(PhantomData<Comp>);
-
-impl<Comp: TComp> AutomaticUpdate<Comp> {
-    #[allow(clippy::new_ret_no_self)]
-    pub fn new() -> AutomaticUpdatePlugin<Comp, SpatialSet> {
-        default()
-    }
-}
-
-pub struct AutomaticUpdatePlugin<Comp, Set>
+/// Plugin struct for setting up a spatial datastructure with automatic updating.
+///
+///
+/// ```
+/// #[derive(Component)]
+/// struct EntityMarker;
+///
+/// App::new()
+///    .add_plugins(DefaultPlugins)
+///    .add_plugin(AutomaticUpdate::<EntityMarker>::new()
+///             .with_frequency(Duration::from_secs_f32(0.3))
+///             .with_spatial_ds(SpatialStructure::KDTree2)
+///             .with_transform(TransformMode::GlobalTransform)
+///     )
+///
+/// ```
+pub struct AutomaticUpdate<Comp, Set = SpatialSet>
 where
     Set: FreeSystemSet,
 {
@@ -47,9 +55,11 @@ where
     pub(crate) spatial_ds: SpatialStructure,
 }
 
-impl<Comp: TComp> Default for AutomaticUpdatePlugin<Comp, SpatialSet> {
-    fn default() -> Self {
-        AutomaticUpdatePlugin {
+impl<Comp, Set: FreeSystemSet> AutomaticUpdate<Comp, Set> {
+    /// Create a new [`AutomaticUpdate`] with defaults including default [`SystemSet`]: [`SpatialSet`].
+    #[must_use]
+    pub fn new() -> AutomaticUpdate<Comp, SpatialSet> {
+        AutomaticUpdate {
             comp: PhantomData,
             set: SpatialSet,
             frequency: Duration::from_millis(50),
@@ -57,16 +67,14 @@ impl<Comp: TComp> Default for AutomaticUpdatePlugin<Comp, SpatialSet> {
             spatial_ds: default(),
         }
     }
-}
 
-impl<Tree, Set: FreeSystemSet> AutomaticUpdatePlugin<Tree, Set> {
     /// Change the Bevy [`FreeSystemSet`] in which this plugin will put its systems.
-    pub fn with_set<NewSet: FreeSystemSet>(
+    pub fn with_set<NewSet: FreeSystemSet + Copy>(
         self,
         set: NewSet,
-    ) -> AutomaticUpdatePlugin<Tree, NewSet> {
+    ) -> AutomaticUpdate<Comp, NewSet> {
         // Struct filling for differing types is experimental. Have to manually list each.
-        AutomaticUpdatePlugin::<Tree, NewSet> {
+        AutomaticUpdate::<Comp, NewSet> {
             set,
             comp: PhantomData,
             frequency: self.frequency,
@@ -77,21 +85,40 @@ impl<Tree, Set: FreeSystemSet> AutomaticUpdatePlugin<Tree, Set> {
 
     /// Change which spatial datastructure is used.
     ///
-    ///
+    /// expects one of:
+    /// - [`SpatialStructure::KDTree2`]
+    /// - [`SpatialStructure::KDTree3`] (default)
+    /// - [`SpatialStructure::KDTree3A`]
+    #[must_use]
     pub fn with_spatial_ds(self, spatial_ds: SpatialStructure) -> Self {
         Self { spatial_ds, ..self }
     }
 
+    /// Change the update rate.
+    ///
+    /// Expects a [Duration] which is the delay between updates.
+    #[must_use]
     pub fn with_frequency(self, frequency: Duration) -> Self {
         Self { frequency, ..self }
     }
 
+    /// Change which Transform is used to extrat coordinates from.
+    ///
+    /// - [`TransformMode::Transform`] (default)
+    /// - [`TransformMode::GlobalTransform`]
+    ///
+    /// Note: using [`TransformMode::GlobalTransform`] might cause double frame-delays
+    /// as Transform->GlobalTransform propagation happens in the
+    /// [`TransformPropagate`](bevy::transform::TransformSystem::TransformPropagate) [`SystemSet`] in [`PostUpdate`](bevy::app::CoreSet::PostUpdate).
+    /// You can order this plugins systems by modifying the default [`SpatialSet`]
+    /// or using your own [`FreeSystemSet`] by calling [`AutomaticUpdate::with_set`](Self::with_set)
+    #[must_use]
     pub fn with_transform(self, transform: TransformMode) -> Self {
         Self { transform, ..self }
     }
 }
 
-impl<Comp: TComp, Set: FreeSystemSet + Copy> Plugin for AutomaticUpdatePlugin<Comp, Set> {
+impl<Comp: TComp, Set: FreeSystemSet + Copy> Plugin for AutomaticUpdate<Comp, Set> {
     fn build(&self, app: &mut App) {
         app.insert_resource(TimestepLength(self.frequency, PhantomData::<Comp>))
             .configure_set(self.set.run_if(on_timer_changeable::<Comp>));

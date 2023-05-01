@@ -20,6 +20,7 @@ use crate::TComp;
 /// }
 /// ```
 /// `NearestNeighbourMarker` in this case refers to the (marker) component you also passed to the Plugin.
+#[allow(clippy::module_name_repetitions)]
 #[derive(Resource, Default)]
 pub struct TimestepLength<Comp>(pub Duration, pub(crate) PhantomData<Comp>);
 
@@ -30,11 +31,13 @@ impl<Comp> TimestepLength<Comp> {
     }
 
     /// Get the length of the timestep.
+    #[must_use]
     pub fn get_duration(&self) -> Duration {
         self.0
     }
 }
 
+#[allow(clippy::needless_pass_by_value)]
 pub fn on_timer_changeable<Comp>(
     length: Res<TimestepLength<Comp>>,
     time: Res<Time>,

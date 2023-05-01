@@ -2,18 +2,26 @@
 name = "bevy_spatial"
 description = "A crate for tracking bevy entities in spatial indices."
 documentation = "https://docs.rs/bevy_spatial"
-version = "0.4.0"
+version = "0.5.0"
 license = "MIT OR Apache-2.0"
 edition = "2021"
-keywords = ["gamedev", "bevy", "spatial", "kdtree", "rtree"]
+keywords = [
+    "gamedev",
+    "bevy",
+    "spatial",
+    "kdtree",
+    "rtree",
+    "knn",
+    "neighbours",
+    "nearest",
+    "nearest-neighbour",
+]
 repository = "https://github.com/laundmo/bevy-spatial"
 readme = "README.md"
 authors = ["laundmo"]
 
 [dependencies]
 bevy = { version = "0.10", default-features = false }
-# R*-Tree dependencies
-rstar = { version = "0.10", optional = true }
 # KD-Tree dependencies
 kd-tree = { version = "0.5.1", optional = true, features = ["rayon"] }
 typenum = { version = "1.15.0" }
@@ -22,12 +30,10 @@ num-traits = { version = "0.2.15" }
 
 [features]
 default = ["kdtree"]
-rstar = ["dep:rstar"]
 kdtree = ["dep:kd-tree"]
 
 [dev-dependencies]
 bevy = { version = "0.10" }
-criterion = { version = "0.4.0", features = ["real_blackbox", "html_reports"] }
 rand = "0.8.5"
 wasm-server-runner = "0.4.0"
 
@@ -45,14 +51,6 @@ opt-level = 3
 inherits = "release"
 debug = true
 
-[[bench]]
-name = "kdtree"
-harness = false
-
-[[bench]]
-name = "rstartree"
-harness = false
-
 
 [[example]]
 name = "distance2d"
@@ -60,7 +58,7 @@ required-features = ["kdtree"]
 
 [[example]]
 name = "distance3d"
-required-features = ["rstar"]
+required-features = ["kdtree"]
 
 [[example]]
 name = "modify_timestep"
