@@ -14,15 +14,15 @@ struct Chaser;
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-        .add_plugin(
+        .add_plugins(
             AutomaticUpdate::<NearestNeighbour>::new()
                 .with_frequency(Duration::from_secs_f32(0.3))
                 .with_spatial_ds(SpatialStructure::KDTree2),
         )
-        .add_startup_system(setup)
-        .add_system(move_to)
-        .add_system(rotate_around)
-        .add_system(mouseclick)
+        .add_systems(Startup, setup)
+        .add_systems(Update, move_to)
+        .add_systems(Update, rotate_around)
+        .add_systems(Update, mouseclick)
         .run();
 }
 

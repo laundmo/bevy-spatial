@@ -6,7 +6,10 @@ use crate::{
     SpatialAccess,
 };
 
-use bevy::{ecs::schedule::FreeSystemSet, prelude::*};
+use bevy::{
+    ecs::schedule::{ScheduleLabel, SystemSet},
+    prelude::*,
+};
 
 /// Select which Transform to use when automatically updating the Spatial Datastructure.
 #[derive(Clone, Default, Copy)]
@@ -48,8 +51,8 @@ where
         );
     }
 
-    pub fn build(app: &mut App, set: impl FreeSystemSet) {
-        app.add_system(Self::update_ds.no_default_base_set().in_set(set));
+    pub fn build(app: &mut App, schedule: impl ScheduleLabel, set: impl SystemSet) {
+        app.add_systems(schedule, Self::update_ds.in_set(set));
     }
 }
 
@@ -80,7 +83,7 @@ where
         );
     }
 
-    pub fn build(app: &mut App, set: impl FreeSystemSet) {
-        app.add_system(Self::update_ds.no_default_base_set().in_set(set));
+    pub fn build(app: &mut App, schedule: impl ScheduleLabel, set: impl SystemSet) {
+        app.add_systems(schedule, Self::update_ds.in_set(set));
     }
 }

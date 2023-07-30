@@ -14,13 +14,13 @@ struct Cursor;
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-        .add_plugin(AutomaticUpdate::<NearestNeighbourComponent>::new())
-        .add_plugin(LogDiagnosticsPlugin::default())
-        .add_plugin(FrameTimeDiagnosticsPlugin::default())
-        .add_startup_system(setup)
-        .add_system(mouse)
-        .add_system(color)
-        .add_system(reset_color.before(color))
+        .add_plugins(AutomaticUpdate::<NearestNeighbourComponent>::new())
+        .add_plugins(LogDiagnosticsPlugin::default())
+        .add_plugins(FrameTimeDiagnosticsPlugin)
+        .add_systems(Startup, setup)
+        .add_systems(Update, mouse)
+        .add_systems(Update, color)
+        .add_systems(Update, reset_color.before(color))
         .run();
 }
 

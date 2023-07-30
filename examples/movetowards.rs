@@ -13,15 +13,15 @@ struct MoveTowards;
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins.build().disable::<LogPlugin>())
-        .add_plugin(
+        .add_plugins(
             AutomaticUpdate::<NearestNeighbour>::new()
                 .with_spatial_ds(SpatialStructure::KDTree3)
                 .with_frequency(Duration::from_secs(1))
                 .with_transform(TransformMode::Transform),
         )
-        .add_startup_system(setup)
-        .add_system(mouseclick)
-        .add_system(move_to)
+        .add_systems(Startup, setup)
+        .add_systems(Update, mouseclick)
+        .add_systems(Update, move_to)
         .run();
 }
 
