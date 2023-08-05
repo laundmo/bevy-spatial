@@ -16,13 +16,11 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugins(
             AutomaticUpdate::<NearestNeighbour>::new()
-                .with_frequency(Duration::from_secs_f32(0.3))
+                .with_frequency(Duration::from_millis(305))
                 .with_spatial_ds(SpatialStructure::KDTree2),
         )
         .add_systems(Startup, setup)
-        .add_systems(Update, move_to)
-        .add_systems(Update, rotate_around)
-        .add_systems(Update, mouseclick)
+        .add_systems(Update, (move_to, rotate_around, mouseclick))
         .run();
 }
 
@@ -30,6 +28,15 @@ type NNTree = KDTree2<NearestNeighbour>;
 
 fn setup(mut commands: Commands) {
     commands.spawn(Camera2dBundle::default());
+
+    commands.spawn(TextBundle::from_section(
+        "Click mouse to change rate",
+        TextStyle {
+            font_size: 30.0,
+            color: Color::BLACK,
+            ..default()
+        },
+    ));
 
     commands.spawn((
         Chaser,
@@ -92,6 +99,7 @@ fn move_to(
 /// Change the timestep for
 fn mouseclick(
     mouse_input: Res<Input<MouseButton>>,
+    mut text: Query<&mut Text>,
     mut step: ResMut<TimestepLength<NearestNeighbour>>,
     mut other_duration: Local<Duration>,
 ) {
@@ -102,6 +110,10 @@ fn mouseclick(
     if mouse_input.just_pressed(MouseButton::Left) {
         let duration = step.get_duration();
         step.set_duration(*other_duration);
+        text.single_mut().sections[0].value = format!(
+            "Spatial Update Rate: every {}ms",
+            other_duration.as_millis()
+        );
         *other_duration = duration;
     }
 }

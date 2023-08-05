@@ -54,12 +54,12 @@ fn mouseclick(
     mut commands: Commands,
     mouse_input: Res<Input<MouseButton>>,
     window: Query<&Window, With<PrimaryWindow>>,
+    cam: Query<(&Camera, &GlobalTransform)>,
 ) {
-    let win = window.get_single().unwrap();
+    let win = window.single();
+    let (cam, cam_t) = cam.single();
     if mouse_input.just_pressed(MouseButton::Left) {
-        if let Some(mut pos) = win.cursor_position() {
-            pos.x -= win.width() / 2.0;
-            pos.y -= win.height() / 2.0;
+        if let Some(pos) = win.cursor_position() {
             commands.spawn((
                 MoveTowards,
                 SpriteBundle {
@@ -69,7 +69,10 @@ fn mouseclick(
                         ..default()
                     },
                     transform: Transform {
-                        translation: pos.extend(0.0),
+                        translation: cam
+                            .viewport_to_world_2d(cam_t, pos)
+                            .unwrap_or(Vec2::ZERO)
+                            .extend(0.0),
                         ..default()
                     },
                     ..default()

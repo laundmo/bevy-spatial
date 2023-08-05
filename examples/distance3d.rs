@@ -17,10 +17,12 @@ fn main() {
         .add_plugins(AutomaticUpdate::<NearestNeighbourComponent>::new())
         .add_plugins(LogDiagnosticsPlugin::default())
         .add_plugins(FrameTimeDiagnosticsPlugin)
+        .insert_resource(Mouse3D { pos: Vec3::ZERO })
         .add_systems(Startup, setup)
-        .add_systems(Update, mouse)
-        .add_systems(Update, color)
-        .add_systems(Update, reset_color.before(color))
+        .add_systems(
+            Update,
+            (update_mouse_pos, (mouse, color, reset_color.before(color))).chain(),
+        )
         .run();
 }
 
@@ -81,35 +83,39 @@ fn setup(
     }
 }
 
-fn mouse(
+#[derive(Copy, Clone, Resource)]
+struct Mouse3D {
+    pos: Vec3,
+}
+
+fn update_mouse_pos(
     window: Query<&Window, With<PrimaryWindow>>,
-    mut query: Query<&mut Transform, With<Cursor>>,
+    cam: Query<(&Camera, &GlobalTransform)>,
+    mut mouse: ResMut<Mouse3D>,
 ) {
-    let window = window.single();
-    if let Some(mut pos) = window.cursor_position() {
-        pos.x -= window.width() / 2.0;
-        pos.y -= window.height() / 2.0;
-        let mut transform = query.single_mut();
-        transform.translation = pos.extend(0.0);
+    let win = window.single();
+    let (cam, cam_t) = cam.single();
+    if let Some(w_pos) = win.cursor_position() {
+        if let Some(pos) = cam.viewport_to_world(cam_t, w_pos) {
+            mouse.pos = pos.get_point(900.);
+        }
     }
 }
 
-fn color(
-    window: Query<&Window, With<PrimaryWindow>>,
+fn mouse(mouse: Res<Mouse3D>, mut query: Query<&mut Transform, With<Cursor>>) {
+    let mut transform = query.single_mut();
+    transform.translation = mouse.pos;
+}
 
+fn color(
+    mouse: Res<Mouse3D>,
     treeaccess: Res<NNTree>,
     mut query: Query<&mut Handle<StandardMaterial>, With<NearestNeighbourComponent>>,
     colors: Res<MaterialHandles>,
 ) {
-    let window = window.single();
-    if let Some(mut pos) = window.cursor_position() {
-        pos.x -= window.width() / 2.0;
-        pos.y -= window.height() / 2.0;
-
-        for (_, entity) in treeaccess.within_distance(pos.extend(0.0), 100.0) {
-            if let Ok(mut handle) = query.get_mut(entity.expect("No entity")) {
-                *handle = colors.black.clone();
-            }
+    for (_, entity) in treeaccess.within_distance(mouse.pos, 100.0) {
+        if let Ok(mut handle) = query.get_mut(entity.expect("No entity")) {
+            *handle = colors.black.clone();
         }
     }
 }

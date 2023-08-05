@@ -27,12 +27,22 @@ fn main() {
         )
         .add_plugins(LogDiagnosticsPlugin::default())
         .add_plugins(FrameTimeDiagnosticsPlugin)
+        .insert_resource(Mouse2D { pos: Vec2::ZERO })
         .add_systems(Startup, setup)
-        .add_systems(Update, mouse)
-        .add_systems(Update, color)
-        .add_systems(Update, reset_color.before(color))
-        .add_systems(Update, collide_wall)
-        .add_systems(Update, movement)
+        .add_systems(
+            Update,
+            (
+                update_mouse_pos,
+                (
+                    mouse,
+                    color,
+                    reset_color.before(color),
+                    collide_wall,
+                    movement,
+                ),
+            )
+                .chain(),
+        )
         .run();
 }
 
@@ -77,44 +87,53 @@ fn setup(mut commands: Commands) {
         }
     }
 }
+#[derive(Copy, Clone, Resource)]
+struct Mouse2D {
+    pos: Vec2,
+}
+
+fn update_mouse_pos(
+    window: Query<&Window, With<PrimaryWindow>>,
+    cam: Query<(&Camera, &GlobalTransform)>,
+    mut mouse: ResMut<Mouse2D>,
+) {
+    let win = window.single();
+    let (cam, cam_t) = cam.single();
+    if let Some(w_pos) = win.cursor_position() {
+        if let Some(pos) = cam.viewport_to_world_2d(cam_t, w_pos) {
+            mouse.pos = pos;
+        }
+    }
+}
 
 fn mouse(
     mut commands: Commands,
-    window: Query<&Window, With<PrimaryWindow>>,
+    mouse: Res<Mouse2D>,
     treeaccess: Res<NNTree>,
     mut query: Query<&mut Transform, With<Cursor>>,
     ms_buttons: Res<Input<MouseButton>>,
 ) {
     let use_mouse = ms_buttons.pressed(MouseButton::Left);
-    let win = window.get_single().unwrap();
-    if let Some(mut pos) = win.cursor_position() {
-        pos.x -= win.width() / 2.0;
-        pos.y -= win.height() / 2.0;
-        let mut transform = query.single_mut();
-        if let Some((_pos, entity)) = treeaccess.nearest_neighbour(pos) {
-            if use_mouse {
-                transform.translation = pos.extend(1.0); // I don't really know what this is here for
-            } else {
-                commands.entity(entity.unwrap()).despawn();
-            }
+
+    let mut transform = query.single_mut();
+
+    if let Some((_pos, entity)) = treeaccess.nearest_neighbour(mouse.pos) {
+        transform.translation = mouse.pos.extend(0.0); // I don't really know what this is here for
+
+        if use_mouse {
+            commands.entity(entity.unwrap()).despawn();
         }
     }
 }
 
 fn color(
-    window: Query<&Window, With<PrimaryWindow>>,
     treeaccess: Res<NNTree>,
+    mouse: Res<Mouse2D>,
     mut query: Query<&mut Sprite, With<NearestNeighbourComponent>>,
 ) {
-    let win = window.get_single().unwrap();
-    if let Some(mut pos) = win.cursor_position() {
-        pos.x -= win.width() / 2.0;
-        pos.y -= win.height() / 2.0;
-
-        for (_, entity) in treeaccess.within_distance(pos, 50.0) {
-            if let Ok(mut sprite) = query.get_mut(entity.unwrap()) {
-                sprite.color = Color::BLACK;
-            }
+    for (_, entity) in treeaccess.within_distance(mouse.pos, 50.0) {
+        if let Ok(mut sprite) = query.get_mut(entity.unwrap()) {
+            sprite.color = Color::BLACK;
         }
     }
 }
