@@ -24,7 +24,7 @@ fn main() {
         .add_plugin(AutomaticUpdate::<TrackedByKDTree>::new()
             .with_frequency(Duration::from_secs_f32(0.3))
             .with_transform(TransformMode::GlobalTransform))
-        .add_system(use_neighbour);
+        .add_systems(Update, use_neighbour);
     // ...
 }
 
