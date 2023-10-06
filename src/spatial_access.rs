@@ -63,7 +63,6 @@ pub trait SpatialAccess: Send + Sync + 'static {
     ) -> Vec<Self::ResultT>;
 
     /// Return all points which are within the specified rectangular axis-aligned region.
-    /// loc1, loc2 are expected to be sorted along +X (+Y) +Z diagonal.
     fn within(
         &self,
         loc1: <Self::Point as SpatialPoint>::Vec,
