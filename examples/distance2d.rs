@@ -143,16 +143,8 @@ fn color_rect(
     mouse: Res<Mouse2D>,
     mut query: Query<&mut Sprite, With<NearestNeighbourComponent>>,
 ) {
-    let mut p1 = mouse.pos;
-    let mut p2 = Vec2::from([100.0, -100.0]);
-
-    if p1.x > p2.x {
-        (p1.x, p2.x) = (p2.x, p1.x);
-    }
-
-    if p1.y > p2.y {
-        (p1.y, p2.y) = (p2.y, p1.y);
-    }
+    let p1 = mouse.pos;
+    let p2 = Vec2::from([100.0, -100.0]);
 
     for (_, entity) in treeaccess.within(p1, p2) {
         if let Ok(mut sprite) = query.get_mut(entity.unwrap()) {

@@ -110,8 +110,8 @@ macro_rules! kdtree_impl {
             ) -> Vec<Self::ResultT> {
                 let _span = info_span!("within").entered();
 
-                let p1: $pt = loc1.into();
-                let p2: $pt = loc2.into();
+                let p1: $pt = loc1.min(loc2).into();
+                let p2: $pt = loc1.max(loc2).into();
 
                 let rect = [p1, p2];
 
