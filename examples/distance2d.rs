@@ -44,6 +44,7 @@ fn main() {
                 (
                     mouse,
                     color,
+                    color_rect,
                     reset_color.before(color),
                     collide_wall,
                     movement,
@@ -133,6 +134,29 @@ fn color(
     for (_, entity) in treeaccess.within_distance(mouse.pos, 50.0) {
         if let Ok(mut sprite) = query.get_mut(entity.unwrap()) {
             sprite.color = Color::BLACK;
+        }
+    }
+}
+
+fn color_rect(
+    treeaccess: Res<NNTree>,
+    mouse: Res<Mouse2D>,
+    mut query: Query<&mut Sprite, With<NearestNeighbourComponent>>,
+) {
+    let mut p1 = mouse.pos;
+    let mut p2 = Vec2::from([100.0, -100.0]);
+
+    if p1.x > p2.x {
+        (p1.x, p2.x) = (p2.x, p1.x);
+    }
+
+    if p1.y > p2.y {
+        (p1.y, p2.y) = (p2.y, p1.y);
+    }
+
+    for (_, entity) in treeaccess.within(p1, p2) {
+        if let Ok(mut sprite) = query.get_mut(entity.unwrap()) {
+            sprite.color = Color::GREEN;
         }
     }
 }
