@@ -21,7 +21,7 @@ struct TrackedByKDTree;
 
 fn main() {
     App::new()
-        .add_plugin(AutomaticUpdate::<TrackedByKDTree>::new()
+        .add_plugins(AutomaticUpdate::<TrackedByKDTree>::new()
             .with_frequency(Duration::from_secs_f32(0.3))
             .with_transform(TransformMode::GlobalTransform))
         .add_systems(Update, use_neighbour);
@@ -46,6 +46,7 @@ For more details on usage see [Examples](https://github.com/laundmo/bevy-spatial
 
 | bevy | bevy_spatial |
 | ---- | ------------ |
+| 0.12 | 0.7.0        |
 | 0.11 | 0.6.0        |
 | 0.10 | 0.5.0        |
 | 0.9  | 0.4.0        |
