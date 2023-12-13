@@ -143,12 +143,6 @@ impl<Comp, Set: SystemSet, Schedule: ScheduleLabel + Clone> AutomaticUpdate<Comp
 
 impl<Comp: TComp, Set: SystemSet + Copy> Plugin for AutomaticUpdate<Comp, Set> {
     fn build(&self, app: &mut App) {
-        app.insert_resource(TimestepLength(self.frequency, PhantomData::<Comp>))
-            .configure_set(
-                self.schedule.clone(),
-                self.set.run_if(on_timer_changeable::<Comp>),
-            );
-
         match self.spatial_ds {
             SpatialStructure::KDTree2 => app.init_resource::<KDTree2<Comp>>(),
             SpatialStructure::KDTree3 => app.init_resource::<KDTree3<Comp>>(),

@@ -23,7 +23,7 @@ fn main() {
         .add_plugins(
             AutomaticUpdate::<NearestNeighbourComponent>::new()
                 .with_spatial_ds(SpatialStructure::KDTree2)
-                .with_frequency(Duration::from_millis(1)),
+                .with_frequency(Duration::from_millis(1000)),
         )
         .add_plugins(LogDiagnosticsPlugin::default())
         .add_plugins(FrameTimeDiagnosticsPlugin)
