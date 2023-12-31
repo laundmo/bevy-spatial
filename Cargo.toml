@@ -19,8 +19,10 @@ num-traits = { version = "0.2.17" }
 
 
 [features]
-default = ["kdtree"]
+default = ["kdtree", "hash", "grid_2d"]
 kdtree = ["dep:kd-tree"]
+hash = []
+grid_2d = []
 
 [dev-dependencies]
 bevy = { version = "0.12" }

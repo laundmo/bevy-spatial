@@ -71,7 +71,7 @@ fn setup(mut commands: Commands) {
         custom_size: Some(Vec2::new(6.0, 6.0)),
         ..default()
     };
-    for x in -100..100 {
+    for x in -101..100 {
         for y in -100..100 {
             commands.spawn((
                 NearestNeighbourComponent,
