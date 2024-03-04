@@ -11,7 +11,7 @@ readme = "README.md"
 authors = ["laundmo"]
 
 [dependencies]
-bevy = { version = "0.12", default-features = false }
+bevy = { version = "0.13", default-features = false }
 # KD-Tree dependencies
 kd-tree = { version = "0.5.1", optional = true, features = ["rayon"] }
 typenum = { version = "1.17.0" }
@@ -23,7 +23,7 @@ default = ["kdtree"]
 kdtree = ["dep:kd-tree"]
 
 [dev-dependencies]
-bevy = { version = "0.12" }
+bevy = { version = "0.13" }
 rand = "0.8.5"
 wasm-server-runner = "0.4.0"
 
