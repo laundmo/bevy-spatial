@@ -98,7 +98,7 @@ fn move_to(
 
 /// Change the timestep for
 fn mouseclick(
-    mouse_input: Res<Input<MouseButton>>,
+    mouse_input: Res<ButtonInput<MouseButton>>,
     mut text: Query<&mut Text>,
     mut step: ResMut<TimestepLength<NearestNeighbour>>,
     mut other_duration: Local<Duration>,
