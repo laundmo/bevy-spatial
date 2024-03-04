@@ -57,3 +57,6 @@ required-features = ["kdtree"]
 [[example]]
 name = "movetowards"
 required-features = ["kdtree"]
+
+[package.metadata.docs.rs]
+cargo-args = ["-Zunstable-options", "-Zrustdoc-scrape-examples"]
