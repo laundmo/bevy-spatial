@@ -98,6 +98,30 @@ macro_rules! kdtree_impl {
                         .collect()
                 }
             }
+
+            /// Return all points which are within the specified rectangular axis-aligned region.
+            fn within(
+                &self,
+                loc1: <Self::Point as SpatialPoint>::Vec,
+                loc2: <Self::Point as SpatialPoint>::Vec,
+            ) -> Vec<Self::ResultT> {
+                let _span = info_span!("within").entered();
+
+                let p1: $pt = loc1.min(loc2).into();
+                let p2: $pt = loc1.max(loc2).into();
+
+                let rect = [p1, p2];
+
+                if self.tree.len() == 0 {
+                    vec![]
+                } else {
+                    self.tree
+                        .within(&rect)
+                        .iter()
+                        .map(|e| (e.vec(), e.entity()))
+                        .collect()
+                }
+            }
         }
         impl<Comp: TComp> UpdateSpatialAccess for $treename<Comp> {
             fn update(
