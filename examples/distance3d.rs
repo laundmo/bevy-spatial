@@ -41,14 +41,14 @@ fn setup(
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     let handles = MaterialHandles {
-        orange_red: materials.add(Color::ORANGE_RED.into()),
-        black: materials.add(Color::BLACK.into()),
-        blue: materials.add(Color::BLUE.into()),
+        orange_red: materials.add(Color::ORANGE_RED),
+        black: materials.add(Color::BLACK),
+        blue: materials.add(Color::BLUE),
     };
     commands.insert_resource(handles.clone());
     commands.insert_resource(AmbientLight {
         color: Color::WHITE,
-        brightness: 0.5,
+        brightness: 500.,
     });
     commands.spawn(Camera3dBundle {
         transform: Transform::from_xyz(0.0, 100.0, 900.0).looking_at(Vec3::ZERO, Vec3::Y),

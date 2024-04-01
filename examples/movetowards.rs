@@ -52,7 +52,7 @@ fn setup(mut commands: Commands) {
 
 fn mouseclick(
     mut commands: Commands,
-    mouse_input: Res<Input<MouseButton>>,
+    mouse_input: Res<ButtonInput<MouseButton>>,
     window: Query<&Window, With<PrimaryWindow>>,
     cam: Query<(&Camera, &GlobalTransform)>,
 ) {

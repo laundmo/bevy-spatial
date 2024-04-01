@@ -47,7 +47,7 @@ where
                     changed,
                 )
             }),
-            removed.iter(),
+            removed.read(),
         );
     }
 
@@ -79,7 +79,7 @@ where
                     changed,
                 )
             }),
-            removed.iter(),
+            removed.read(),
         );
     }
 
