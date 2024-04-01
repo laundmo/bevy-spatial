@@ -2,7 +2,7 @@
 name = "bevy_spatial"
 description = "A crate for tracking bevy entities in spatial indices."
 documentation = "https://docs.rs/bevy_spatial"
-version = "0.7.0"
+version = "0.8.0"
 license = "MIT OR Apache-2.0"
 edition = "2021"
 keywords = ["gamedev", "bevy", "kdtree", "knn", "nearest-neighbour"]
@@ -11,7 +11,7 @@ readme = "README.md"
 authors = ["laundmo"]
 
 [dependencies]
-bevy = { version = "0.12", default-features = false }
+bevy = { version = "0.13", default-features = false }
 # KD-Tree dependencies
 kd-tree = { version = "0.5.1", optional = true, features = ["rayon"] }
 typenum = { version = "1.17.0" }
@@ -23,7 +23,7 @@ default = ["kdtree"]
 kdtree = ["dep:kd-tree"]
 
 [dev-dependencies]
-bevy = { version = "0.12" }
+bevy = { version = "0.13" }
 rand = "0.8.5"
 wasm-server-runner = "0.4.0"
 
@@ -57,3 +57,6 @@ required-features = ["kdtree"]
 [[example]]
 name = "movetowards"
 required-features = ["kdtree"]
+
+[package.metadata.docs.rs]
+cargo-args = ["-Zunstable-options", "-Zrustdoc-scrape-examples"]

@@ -9,9 +9,9 @@ A bevy plugin to track your entities in spatial indices and query them.
 ![crates.io](https://img.shields.io/crates/v/bevy_spatial.svg)
 
 Currently implemented features:
-|Feature|Description|
-|-|-|
-|`kdtree` (default) |KD-Tree for spatial lookups which is fully recreated on update, but fast to recreate. Works well in most situations.|
+| Feature            | Description                                                                                                          |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------- |
+| `kdtree` (default) | KD-Tree for spatial lookups which is fully recreated on update, but fast to recreate. Works well in most situations. |
 
 ```rust
 use bevy_spatial::{AutomaticUpdate, KDTree3, TransformMode, SpatialAccess};
@@ -46,6 +46,7 @@ For more details on usage see [Examples](https://github.com/laundmo/bevy-spatial
 
 | bevy | bevy_spatial |
 | ---- | ------------ |
+| 0.13 | 0.8.0        |
 | 0.12 | 0.7.0        |
 | 0.11 | 0.6.0        |
 | 0.10 | 0.5.0        |
