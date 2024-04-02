@@ -6,7 +6,7 @@ use bevy::{
     prelude::*,
     window::PrimaryWindow,
 };
-use bevy_spatial::{kdtree::KDTree2, SpatialAccess};
+use bevy_spatial::{kdtree::KDTree2, SpatialAccess, SpatialAABBAccess};
 use bevy_spatial::{AutomaticUpdate, SpatialStructure};
 // marker for entities tracked by the KDTree
 #[derive(Component, Default)]
@@ -35,8 +35,8 @@ fn main() {
                 update_mouse_pos,
                 (
                     mouse,
-                    color,
-                    reset_color.before(color),
+                    color_rect,
+                    reset_color.before(color_rect),
                     collide_wall,
                     movement,
                 ),
@@ -115,25 +115,29 @@ fn mouse(
 ) {
     let use_mouse = ms_buttons.pressed(MouseButton::Left);
 
+    let p1 = mouse.pos;
+    let p2 = Vec2::from([100.0, -100.0]);
+
     let mut transform = query.single_mut();
 
-    if let Some((_pos, entity)) = treeaccess.nearest_neighbour(mouse.pos) {
-        transform.translation = mouse.pos.extend(0.0); // I don't really know what this is here for
-
+    for (_, entity) in treeaccess.within(p1, p2) {
         if use_mouse {
             commands.entity(entity.unwrap()).despawn();
         }
     }
 }
 
-fn color(
+fn color_rect(
     treeaccess: Res<NNTree>,
     mouse: Res<Mouse2D>,
     mut query: Query<&mut Sprite, With<NearestNeighbourComponent>>,
 ) {
-    for (_, entity) in treeaccess.within_distance(mouse.pos, 50.0) {
+    let p1 = mouse.pos;
+    let p2 = Vec2::from([100.0, -100.0]);
+
+    for (_, entity) in treeaccess.within(p1, p2) {
         if let Ok(mut sprite) = query.get_mut(entity.unwrap()) {
-            sprite.color = Color::BLACK;
+            sprite.color = Color::GREEN;
         }
     }
 }
