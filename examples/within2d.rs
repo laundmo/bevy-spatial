@@ -6,7 +6,7 @@ use bevy::{
     prelude::*,
     window::PrimaryWindow,
 };
-use bevy_spatial::{kdtree::KDTree2, SpatialAccess, SpatialAABBAccess};
+use bevy_spatial::{kdtree::KDTree2, SpatialAABBAccess};
 use bevy_spatial::{AutomaticUpdate, SpatialStructure};
 // marker for entities tracked by the KDTree
 #[derive(Component, Default)]
