@@ -61,7 +61,9 @@ pub trait SpatialAccess: Send + Sync + 'static {
         loc: <Self::Point as SpatialPoint>::Vec,
         distance: <Self::Point as SpatialPoint>::Scalar,
     ) -> Vec<Self::ResultT>;
+}
 
+pub trait SpatialAABBAccess: SpatialAccess {
     /// Return all points which are within the specified rectangular axis-aligned region.
     fn within(
         &self,
@@ -69,5 +71,3 @@ pub trait SpatialAccess: Send + Sync + 'static {
         loc2: <Self::Point as SpatialPoint>::Vec,
     ) -> Vec<Self::ResultT>;
 }
-
-// TODO: SpatialAABBAccess trait definition - should it be separate from SpatialAccess or depend on it?

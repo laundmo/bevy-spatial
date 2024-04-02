@@ -6,7 +6,7 @@ use kd_tree::{KdPoint, KdTree as BaseKdTree, KdTreeN};
 use crate::{
     TComp,
     point::SpatialPoint,
-    spatial_access::{SpatialAccess, UpdateSpatialAccess},
+    spatial_access::{SpatialAABBAccess, SpatialAccess, UpdateSpatialAccess},
 };
 
 use std::marker::PhantomData;
@@ -43,6 +43,35 @@ macro_rules! kdtree_impl {
                 Self {
                     tree: default(),
                     component_type: PhantomData,
+                }
+            }
+        }
+
+        impl<Comp> SpatialAABBAccess for $treename<Comp>
+        where
+            Comp: TComp,
+        {
+            /// Return all points which are within the specified rectangular axis-aligned region.
+            fn within(
+                &self,
+                loc1: <Self::Point as SpatialPoint>::Vec,
+                loc2: <Self::Point as SpatialPoint>::Vec,
+            ) -> Vec<Self::ResultT> {
+                let _span = info_span!("within").entered();
+
+                let p1: $pt = loc1.min(loc2).into();
+                let p2: $pt = loc1.max(loc2).into();
+
+                let rect = [p1, p2];
+
+                if self.tree.len() == 0 {
+                    vec![]
+                } else {
+                    self.tree
+                        .within(&rect)
+                        .iter()
+                        .map(|e| (e.vec(), e.entity()))
+                        .collect()
                 }
             }
         }
@@ -95,30 +124,6 @@ macro_rules! kdtree_impl {
 
                     self.tree
                         .within_radius(&p, distance)
-                        .iter()
-                        .map(|e| (e.vec(), e.entity()))
-                        .collect()
-                }
-            }
-
-            /// Return all points which are within the specified rectangular axis-aligned region.
-            fn within(
-                &self,
-                loc1: <Self::Point as SpatialPoint>::Vec,
-                loc2: <Self::Point as SpatialPoint>::Vec,
-            ) -> Vec<Self::ResultT> {
-                let _span = info_span!("within").entered();
-
-                let p1: $pt = loc1.min(loc2).into();
-                let p2: $pt = loc1.max(loc2).into();
-
-                let rect = [p1, p2];
-
-                if self.tree.len() == 0 {
-                    vec![]
-                } else {
-                    self.tree
-                        .within(&rect)
                         .iter()
                         .map(|e| (e.vec(), e.entity()))
                         .collect()

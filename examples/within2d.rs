@@ -1,15 +1,13 @@
-use std::ops::Deref;
 use std::time::Duration;
 
 use bevy::{
-    color::palettes::css as csscolors,
     diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
     math::Vec3Swizzles,
     prelude::*,
     window::PrimaryWindow,
 };
+use bevy_spatial::{kdtree::KDTree2, SpatialAccess, SpatialAABBAccess};
 use bevy_spatial::{AutomaticUpdate, SpatialStructure};
-use bevy_spatial::{SpatialAccess, kdtree::KDTree2};
 // marker for entities tracked by the KDTree
 #[derive(Component, Default)]
 struct NearestNeighbourComponent;
@@ -20,13 +18,7 @@ struct Cursor;
 
 fn main() {
     App::new()
-        .add_plugins(DefaultPlugins.set(WindowPlugin {
-            primary_window: Some(Window {
-                present_mode: bevy::window::PresentMode::AutoNoVsync,
-                ..default()
-            }),
-            ..default()
-        }))
+        .add_plugins(DefaultPlugins)
         // Add the plugin, which takes the tracked component as a generic.
         .add_plugins(
             AutomaticUpdate::<NearestNeighbourComponent>::new()
@@ -34,7 +26,7 @@ fn main() {
                 .with_frequency(Duration::from_millis(1)),
         )
         .add_plugins(LogDiagnosticsPlugin::default())
-        .add_plugins(FrameTimeDiagnosticsPlugin::default())
+        .add_plugins(FrameTimeDiagnosticsPlugin)
         .insert_resource(Mouse2D { pos: Vec2::ZERO })
         .add_systems(Startup, setup)
         .add_systems(
@@ -43,8 +35,8 @@ fn main() {
                 update_mouse_pos,
                 (
                     mouse,
-                    color,
-                    reset_color.before(color),
+                    color_rect,
+                    reset_color.before(color_rect),
                     collide_wall,
                     movement,
                 ),
@@ -58,21 +50,24 @@ fn main() {
 type NNTree = KDTree2<NearestNeighbourComponent>;
 
 fn setup(mut commands: Commands) {
-    commands.spawn(Camera2d);
+    commands.spawn(Camera2dBundle::default());
     commands.spawn((
         Cursor,
-        Sprite {
-            color: Color::srgb(0.0, 0.0, 1.0),
-            custom_size: Some(Vec2::new(10.0, 10.0)),
-            ..default()
-        },
-        Transform {
-            translation: Vec3::ZERO,
+        SpriteBundle {
+            sprite: Sprite {
+                color: Color::rgb(0.0, 0.0, 1.0),
+                custom_size: Some(Vec2::new(10.0, 10.0)),
+                ..default()
+            },
+            transform: Transform {
+                translation: Vec3::ZERO,
+                ..default()
+            },
             ..default()
         },
     ));
     let sprite = Sprite {
-        color: csscolors::ORANGE_RED.into(),
+        color: Color::ORANGE_RED,
         custom_size: Some(Vec2::new(6.0, 6.0)),
         ..default()
     };
@@ -80,9 +75,12 @@ fn setup(mut commands: Commands) {
         for y in -100..100 {
             commands.spawn((
                 NearestNeighbourComponent,
-                sprite.clone(),
-                Transform {
-                    translation: Vec3::new((x * 4) as f32, (y * 4) as f32, 0.0),
+                SpriteBundle {
+                    sprite: sprite.clone(),
+                    transform: Transform {
+                        translation: Vec3::new((x * 4) as f32, (y * 4) as f32, 0.0),
+                        ..default()
+                    },
                     ..default()
                 },
             ));
@@ -95,13 +93,14 @@ struct Mouse2D {
 }
 
 fn update_mouse_pos(
-    window: Single<&Window, With<PrimaryWindow>>,
-    camera: Single<(&Camera, &GlobalTransform)>,
+    window: Query<&Window, With<PrimaryWindow>>,
+    cam: Query<(&Camera, &GlobalTransform)>,
     mut mouse: ResMut<Mouse2D>,
 ) {
-    let (cam, cam_t) = camera.deref();
-    if let Some(w_pos) = window.cursor_position() {
-        if let Ok(pos) = cam.viewport_to_world_2d(cam_t, w_pos) {
+    let win = window.single();
+    let (cam, cam_t) = cam.single();
+    if let Some(w_pos) = win.cursor_position() {
+        if let Some(pos) = cam.viewport_to_world_2d(cam_t, w_pos) {
             mouse.pos = pos;
         }
     }
@@ -111,35 +110,41 @@ fn mouse(
     mut commands: Commands,
     mouse: Res<Mouse2D>,
     treeaccess: Res<NNTree>,
-    mut transform: Single<&mut Transform, With<Cursor>>,
+    mut query: Query<&mut Transform, With<Cursor>>,
     ms_buttons: Res<ButtonInput<MouseButton>>,
 ) {
     let use_mouse = ms_buttons.pressed(MouseButton::Left);
 
-    if let Some((_pos, entity)) = treeaccess.nearest_neighbour(mouse.pos) {
-        transform.translation = mouse.pos.extend(0.0); // I don't really know what this is here for
+    let p1 = mouse.pos;
+    let p2 = Vec2::from([100.0, -100.0]);
 
+    let mut transform = query.single_mut();
+
+    for (_, entity) in treeaccess.within(p1, p2) {
         if use_mouse {
             commands.entity(entity.unwrap()).despawn();
         }
     }
 }
 
-fn color(
+fn color_rect(
     treeaccess: Res<NNTree>,
     mouse: Res<Mouse2D>,
     mut query: Query<&mut Sprite, With<NearestNeighbourComponent>>,
 ) {
-    for (_, entity) in treeaccess.within_distance(mouse.pos, 50.0) {
+    let p1 = mouse.pos;
+    let p2 = Vec2::from([100.0, -100.0]);
+
+    for (_, entity) in treeaccess.within(p1, p2) {
         if let Ok(mut sprite) = query.get_mut(entity.unwrap()) {
-            sprite.color = Color::BLACK;
+            sprite.color = Color::GREEN;
         }
     }
 }
 
 fn reset_color(mut query: Query<&mut Sprite, With<NearestNeighbourComponent>>) {
     for mut sprite in &mut query {
-        sprite.color = csscolors::ORANGE_RED.into();
+        sprite.color = Color::ORANGE_RED;
     }
 }
 
@@ -151,11 +156,13 @@ fn movement(mut query: Query<&mut Transform, With<NearestNeighbourComponent>>) {
 }
 
 fn collide_wall(
-    window: Single<&Window, With<PrimaryWindow>>,
+    window: Query<&Window, With<PrimaryWindow>>,
     mut query: Query<&mut Transform, With<NearestNeighbourComponent>>,
 ) {
-    let w = window.width() / 2.0;
-    let h = window.height() / 2.0;
+    let win = window.get_single().unwrap();
+
+    let w = win.width() / 2.0;
+    let h = win.height() / 2.0;
 
     for mut pos in &mut query {
         let [x, y] = pos.translation.xy().to_array();
