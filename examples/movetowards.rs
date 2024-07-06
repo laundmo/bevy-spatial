@@ -1,4 +1,11 @@
-use bevy::{log::LogPlugin, prelude::*, window::PrimaryWindow};
+use bevy::{
+    diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
+    ecs::query,
+    math::vec2,
+    prelude::*,
+    time::common_conditions::on_timer,
+    window::PrimaryWindow,
+};
 use bevy_spatial::{
     kdtree::KDTree3, AutomaticUpdate, SpatialAccess, SpatialStructure, TransformMode,
 };
@@ -12,16 +19,24 @@ struct MoveTowards;
 
 fn main() {
     App::new()
-        .add_plugins(DefaultPlugins.build().disable::<LogPlugin>())
+        .add_plugins(DefaultPlugins)
         .add_plugins(
             AutomaticUpdate::<NearestNeighbour>::new()
                 .with_spatial_ds(SpatialStructure::KDTree3)
                 .with_frequency(Duration::from_secs(1))
                 .with_transform(TransformMode::Transform),
         )
+        .add_plugins(FrameTimeDiagnosticsPlugin::default())
+        .add_plugins(LogDiagnosticsPlugin::default())
         .add_systems(Startup, setup)
-        .add_systems(Update, mouseclick)
-        .add_systems(Update, move_to)
+        .add_systems(
+            Update,
+            (
+                mouseclick,
+                log_num.run_if(on_timer(Duration::from_secs_f32(0.5))),
+                move_to,
+            ),
+        )
         .run();
 }
 
@@ -58,26 +73,33 @@ fn mouseclick(
 ) {
     let win = window.single();
     let (cam, cam_t) = cam.single();
-    if mouse_input.just_pressed(MouseButton::Left) {
+    if mouse_input.pressed(MouseButton::Left) {
         if let Some(pos) = win.cursor_position() {
-            commands.spawn((
-                MoveTowards,
-                SpriteBundle {
-                    sprite: Sprite {
-                        color: Color::srgb(0.15, 0.15, 1.0),
-                        custom_size: Some(Vec2::new(10.0, 10.0)),
-                        ..default()
-                    },
-                    transform: Transform {
-                        translation: cam
-                            .viewport_to_world_2d(cam_t, pos)
-                            .unwrap_or(Vec2::ZERO)
-                            .extend(0.0),
-                        ..default()
-                    },
-                    ..default()
-                },
-            ));
+            for xoff in -1..=1 {
+                for yoff in -1..=1 {
+                    commands.spawn((
+                        MoveTowards,
+                        SpriteBundle {
+                            sprite: Sprite {
+                                color: Color::srgb(0.15, 0.15, 1.0),
+                                custom_size: Some(Vec2::new(10.0, 10.0)),
+                                ..default()
+                            },
+                            transform: Transform {
+                                translation: cam
+                                    .viewport_to_world_2d(
+                                        cam_t,
+                                        pos + vec2(xoff as f32 * 16., yoff as f32 * 16.),
+                                    )
+                                    .unwrap_or(Vec2::ZERO)
+                                    .extend(0.0),
+                                ..default()
+                            },
+                            ..default()
+                        },
+                    ));
+                }
+            }
         }
     }
 }
@@ -93,4 +115,8 @@ fn move_to(
             transform.translation += towards.normalize() * time.delta_seconds() * 64.0;
         }
     }
+}
+
+fn log_num(query: Query<(), With<MoveTowards>>) {
+    info!(target: "blue", amount = query.iter().len())
 }
