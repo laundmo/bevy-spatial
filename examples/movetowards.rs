@@ -35,7 +35,7 @@ fn setup(mut commands: Commands) {
                 NearestNeighbour,
                 SpriteBundle {
                     sprite: Sprite {
-                        color: Color::rgb(0.7, 0.3, 0.5),
+                        color: Color::srgb(0.7, 0.3, 0.5),
                         custom_size: Some(Vec2::new(10.0, 10.0)),
                         ..default()
                     },
@@ -64,7 +64,7 @@ fn mouseclick(
                 MoveTowards,
                 SpriteBundle {
                     sprite: Sprite {
-                        color: Color::rgb(0.15, 0.15, 1.0),
+                        color: Color::srgb(0.15, 0.15, 1.0),
                         custom_size: Some(Vec2::new(10.0, 10.0)),
                         ..default()
                     },

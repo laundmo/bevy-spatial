@@ -1,6 +1,8 @@
 use std::time::Duration;
 
+use bevy::color::palettes::css as csscolors;
 use bevy::prelude::*;
+
 use bevy_spatial::{
     kdtree::KDTree2, AutomaticUpdate, SpatialAccess, SpatialStructure, TimestepLength,
 };
@@ -42,7 +44,7 @@ fn setup(mut commands: Commands) {
         Chaser,
         SpriteBundle {
             sprite: Sprite {
-                color: Color::BLUE,
+                color: csscolors::BLUE.into(),
                 custom_size: Some(Vec2::new(10.0, 10.0)),
                 ..default()
             },
@@ -52,22 +54,22 @@ fn setup(mut commands: Commands) {
     ));
 
     let neighbours = [
-        (Color::RED, Vec3::Y * 100.),
-        (Color::RED, Vec3::NEG_Y * 100.),
-        (Color::RED, Vec3::X * 100.),
-        (Color::RED, Vec3::NEG_X * 100.),
+        (csscolors::RED, Vec3::Y * 100.),
+        (csscolors::RED, Vec3::NEG_Y * 100.),
+        (csscolors::RED, Vec3::X * 100.),
+        (csscolors::RED, Vec3::NEG_X * 100.),
     ];
 
-    for (color, position) in neighbours.iter() {
+    for (color, position) in neighbours {
         commands.spawn((
             NearestNeighbour,
             SpriteBundle {
                 sprite: Sprite {
-                    color: *color,
+                    color: Color::from(color),
                     custom_size: Some(Vec2::new(10.0, 10.0)),
                     ..default()
                 },
-                transform: Transform::from_translation(*position),
+                transform: Transform::from_translation(position),
                 ..default()
             },
         ));
