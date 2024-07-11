@@ -1,4 +1,5 @@
 use bevy::{
+    color::palettes::css as csscolors,
     diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
     prelude::*,
     window::PrimaryWindow,
@@ -41,9 +42,9 @@ fn setup(
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     let handles = MaterialHandles {
-        orange_red: materials.add(Color::ORANGE_RED),
-        black: materials.add(Color::BLACK),
-        blue: materials.add(Color::BLUE),
+        orange_red: materials.add(Color::from(csscolors::ORANGE_RED)),
+        black: materials.add(Color::from(csscolors::BLACK)),
+        blue: materials.add(Color::from(csscolors::BLUE)),
     };
     commands.insert_resource(handles.clone());
     commands.insert_resource(AmbientLight {
@@ -56,7 +57,7 @@ fn setup(
     });
     commands
         .spawn(PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Cube { size: 10.0 })),
+            mesh: meshes.add(Cuboid::new(10., 10., 10.)),
             material: handles.blue.clone(),
             transform: Transform::from_xyz(0.0, 0.5, 0.0),
             ..default()
@@ -68,7 +69,7 @@ fn setup(
             for z in -6..6 {
                 commands
                     .spawn(PbrBundle {
-                        mesh: meshes.add(Mesh::from(shape::Cube { size: 4.0 })),
+                        mesh: meshes.add(Cuboid::new(4., 4., 4.)),
                         material: handles.orange_red.clone(),
                         transform: Transform::from_xyz(
                             (x * 15) as f32,
