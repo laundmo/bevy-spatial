@@ -1,6 +1,7 @@
 use std::time::Duration;
 
 use bevy::{
+    color::palettes::css as csscolors,
     diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
     math::Vec3Swizzles,
     prelude::*,
@@ -55,7 +56,7 @@ fn setup(mut commands: Commands) {
         Cursor,
         SpriteBundle {
             sprite: Sprite {
-                color: Color::rgb(0.0, 0.0, 1.0),
+                color: Color::srgb(0.0, 0.0, 1.0),
                 custom_size: Some(Vec2::new(10.0, 10.0)),
                 ..default()
             },
@@ -67,7 +68,7 @@ fn setup(mut commands: Commands) {
         },
     ));
     let sprite = Sprite {
-        color: Color::ORANGE_RED,
+        color: csscolors::ORANGE_RED.into(),
         custom_size: Some(Vec2::new(6.0, 6.0)),
         ..default()
     };
@@ -110,15 +111,12 @@ fn mouse(
     mut commands: Commands,
     mouse: Res<Mouse2D>,
     treeaccess: Res<NNTree>,
-    mut query: Query<&mut Transform, With<Cursor>>,
     ms_buttons: Res<ButtonInput<MouseButton>>,
 ) {
     let use_mouse = ms_buttons.pressed(MouseButton::Left);
 
     let p1 = mouse.pos;
     let p2 = Vec2::from([100.0, -100.0]);
-
-    let mut transform = query.single_mut();
 
     for (_, entity) in treeaccess.within(p1, p2) {
         if use_mouse {
@@ -137,14 +135,14 @@ fn color_rect(
 
     for (_, entity) in treeaccess.within(p1, p2) {
         if let Ok(mut sprite) = query.get_mut(entity.unwrap()) {
-            sprite.color = Color::GREEN;
+            sprite.color = csscolors::GREEN.into();
         }
     }
 }
 
 fn reset_color(mut query: Query<&mut Sprite, With<NearestNeighbourComponent>>) {
     for mut sprite in &mut query {
-        sprite.color = Color::ORANGE_RED;
+        sprite.color = csscolors::ORANGE_RED.into();
     }
 }
 
