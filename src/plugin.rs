@@ -141,7 +141,7 @@ impl<Comp, Set: SystemSet, Schedule: ScheduleLabel + Clone> AutomaticUpdate<Comp
     }
 }
 
-impl<Comp: TComp, Set: SystemSet + Copy> Plugin for AutomaticUpdate<Comp, Set> {
+impl<Comp: TComp, Set: SystemSet + Copy, Schedule: ScheduleLabel + Clone> Plugin for AutomaticUpdate<Comp, Set, Schedule> {
     fn build(&self, app: &mut App) {
         app.insert_resource(TimestepLength(self.frequency, PhantomData::<Comp>))
             .configure_sets(
