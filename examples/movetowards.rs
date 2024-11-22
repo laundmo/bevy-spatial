@@ -1,6 +1,5 @@
 use bevy::{
     diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
-    ecs::query,
     math::vec2,
     prelude::*,
     time::common_conditions::on_timer,
@@ -26,7 +25,7 @@ fn main() {
                 .with_frequency(Duration::from_secs(1))
                 .with_transform(TransformMode::Transform),
         )
-        .add_plugins(FrameTimeDiagnosticsPlugin::default())
+        .add_plugins(FrameTimeDiagnosticsPlugin)
         .add_plugins(LogDiagnosticsPlugin::default())
         .add_systems(Startup, setup)
         .add_systems(
@@ -43,21 +42,18 @@ fn main() {
 type NNTree = KDTree3<NearestNeighbour>;
 
 fn setup(mut commands: Commands) {
-    commands.spawn(Camera2dBundle::default());
+    commands.spawn(Camera2d);
     for x in -6..6 {
         for y in -6..6 {
             commands.spawn((
                 NearestNeighbour,
-                SpriteBundle {
-                    sprite: Sprite {
-                        color: Color::srgb(0.7, 0.3, 0.5),
-                        custom_size: Some(Vec2::new(10.0, 10.0)),
-                        ..default()
-                    },
-                    transform: Transform {
-                        translation: Vec3::new((x * 100) as f32, (y * 100) as f32, 0.0),
-                        ..default()
-                    },
+                Sprite {
+                    color: Color::srgb(0.7, 0.3, 0.5),
+                    custom_size: Some(Vec2::new(10.0, 10.0)),
+                    ..default()
+                },
+                Transform {
+                    translation: Vec3::new((x * 100) as f32, (y * 100) as f32, 0.0),
                     ..default()
                 },
             ));
@@ -79,22 +75,19 @@ fn mouseclick(
                 for yoff in -1..=1 {
                     commands.spawn((
                         MoveTowards,
-                        SpriteBundle {
-                            sprite: Sprite {
-                                color: Color::srgb(0.15, 0.15, 1.0),
-                                custom_size: Some(Vec2::new(10.0, 10.0)),
-                                ..default()
-                            },
-                            transform: Transform {
-                                translation: cam
-                                    .viewport_to_world_2d(
-                                        cam_t,
-                                        pos + vec2(xoff as f32 * 16., yoff as f32 * 16.),
-                                    )
-                                    .unwrap_or(Vec2::ZERO)
-                                    .extend(0.0),
-                                ..default()
-                            },
+                        Sprite {
+                            color: Color::srgb(0.15, 0.15, 1.0),
+                            custom_size: Some(Vec2::new(10.0, 10.0)),
+                            ..default()
+                        },
+                        Transform {
+                            translation: cam
+                                .viewport_to_world_2d(
+                                    cam_t,
+                                    pos + vec2(xoff as f32 * 16., yoff as f32 * 16.),
+                                )
+                                .unwrap_or(Vec2::ZERO)
+                                .extend(0.0),
                             ..default()
                         },
                     ));
@@ -112,7 +105,7 @@ fn move_to(
     for mut transform in &mut query {
         if let Some(nearest) = treeaccess.nearest_neighbour(transform.translation) {
             let towards = nearest.0 - transform.translation;
-            transform.translation += towards.normalize() * time.delta_seconds() * 64.0;
+            transform.translation += towards.normalize() * time.delta_secs() * 64.0;
         }
     }
 }

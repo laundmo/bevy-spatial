@@ -28,7 +28,7 @@ macro_rules! kdtree_impl {
         /// Resource for storing a ``KdTree``
         #[derive(Resource)]
         pub struct $treename<Comp> {
-            /// The KdTree
+            /// The ``KdTree``
             pub tree: BaseKdTree<$pt>,
             component_type: PhantomData<Comp>,
         }

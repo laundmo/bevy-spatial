@@ -51,19 +51,16 @@ fn main() {
 type NNTree = KDTree2<NearestNeighbourComponent>;
 
 fn setup(mut commands: Commands) {
-    commands.spawn(Camera2dBundle::default());
+    commands.spawn(Camera2d);
     commands.spawn((
         Cursor,
-        SpriteBundle {
-            sprite: Sprite {
-                color: Color::srgb(0.0, 0.0, 1.0),
-                custom_size: Some(Vec2::new(10.0, 10.0)),
-                ..default()
-            },
-            transform: Transform {
-                translation: Vec3::ZERO,
-                ..default()
-            },
+        Sprite {
+            color: Color::srgb(0.0, 0.0, 1.0),
+            custom_size: Some(Vec2::new(10.0, 10.0)),
+            ..default()
+        },
+        Transform {
+            translation: Vec3::ZERO,
             ..default()
         },
     ));
@@ -76,12 +73,9 @@ fn setup(mut commands: Commands) {
         for y in -100..100 {
             commands.spawn((
                 NearestNeighbourComponent,
-                SpriteBundle {
-                    sprite: sprite.clone(),
-                    transform: Transform {
-                        translation: Vec3::new((x * 4) as f32, (y * 4) as f32, 0.0),
-                        ..default()
-                    },
+                sprite.clone(),
+                Transform {
+                    translation: Vec3::new((x * 4) as f32, (y * 4) as f32, 0.0),
                     ..default()
                 },
             ));
@@ -101,7 +95,7 @@ fn update_mouse_pos(
     let win = window.single();
     let (cam, cam_t) = cam.single();
     if let Some(w_pos) = win.cursor_position() {
-        if let Some(pos) = cam.viewport_to_world_2d(cam_t, w_pos) {
+        if let Ok(pos) = cam.viewport_to_world_2d(cam_t, w_pos) {
             mouse.pos = pos;
         }
     }

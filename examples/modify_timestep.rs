@@ -29,28 +29,25 @@ fn main() {
 type NNTree = KDTree2<NearestNeighbour>;
 
 fn setup(mut commands: Commands) {
-    commands.spawn(Camera2dBundle::default());
+    commands.spawn(Camera2d);
 
-    commands.spawn(TextBundle::from_section(
-        "Click mouse to change rate",
-        TextStyle {
+    commands.spawn((
+        Text("Click mouse to change rate".to_string()),
+        TextFont {
             font_size: 30.0,
-            color: Color::BLACK,
             ..default()
         },
+        TextColor(Color::BLACK),
     ));
 
     commands.spawn((
         Chaser,
-        SpriteBundle {
-            sprite: Sprite {
-                color: csscolors::BLUE.into(),
-                custom_size: Some(Vec2::new(10.0, 10.0)),
-                ..default()
-            },
-            transform: Transform::from_translation(Vec3::ZERO),
+        Sprite {
+            color: csscolors::BLUE.into(),
+            custom_size: Some(Vec2::new(10.0, 10.0)),
             ..default()
         },
+        Transform::from_translation(Vec3::ZERO),
     ));
 
     let neighbours = [
@@ -63,15 +60,12 @@ fn setup(mut commands: Commands) {
     for (color, position) in neighbours {
         commands.spawn((
             NearestNeighbour,
-            SpriteBundle {
-                sprite: Sprite {
-                    color: Color::from(color),
-                    custom_size: Some(Vec2::new(10.0, 10.0)),
-                    ..default()
-                },
-                transform: Transform::from_translation(position),
+            Sprite {
+                color: Color::from(color),
+                custom_size: Some(Vec2::new(10.0, 10.0)),
                 ..default()
             },
+            Transform::from_translation(position),
         ));
     }
 }
@@ -93,7 +87,7 @@ fn move_to(
     for mut transform in &mut query {
         if let Some(nearest) = treeaccess.nearest_neighbour(transform.translation.truncate()) {
             let towards = nearest.0.extend(0.0) - transform.translation;
-            transform.translation += towards.normalize() * time.delta_seconds() * 350.0;
+            transform.translation += towards.normalize() * time.delta_secs() * 350.0;
         }
     }
 }
@@ -112,8 +106,8 @@ fn mouseclick(
     if mouse_input.just_pressed(MouseButton::Left) {
         let duration = step.get_duration();
         step.set_duration(*other_duration);
-        text.single_mut().sections[0].value = format!(
-            "Spatial Update Rate: every {}ms",
+        text.single_mut().0 = format!(
+            "Spatial Update Rate: {} ms",
             other_duration.as_millis()
         );
         *other_duration = duration;

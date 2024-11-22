@@ -51,34 +51,28 @@ fn setup(
         color: Color::WHITE,
         brightness: 500.,
     });
-    commands.spawn(Camera3dBundle {
-        transform: Transform::from_xyz(0.0, 100.0, 900.0).looking_at(Vec3::ZERO, Vec3::Y),
-        ..default()
-    });
+    commands.spawn((
+        Camera3d::default(),
+        Transform::from_xyz(0.0, 100.0, 900.0).looking_at(Vec3::ZERO, Vec3::Y),
+    ));
     commands
-        .spawn(PbrBundle {
-            mesh: meshes.add(Cuboid::new(10., 10., 10.)),
-            material: handles.blue.clone(),
-            transform: Transform::from_xyz(0.0, 0.5, 0.0),
-            ..default()
-        })
+        .spawn((
+            Mesh3d(meshes.add(Cuboid::new(10., 10., 10.))),
+            MeshMaterial3d(handles.blue.clone()),
+            Transform::from_xyz(0.0, 0.5, 0.0),
+        ))
         .insert(Cursor);
 
-    for x in -20..20 {
-        for y in -20..20 {
-            for z in -6..6 {
-                commands
-                    .spawn(PbrBundle {
-                        mesh: meshes.add(Cuboid::new(4., 4., 4.)),
-                        material: handles.orange_red.clone(),
-                        transform: Transform::from_xyz(
-                            (x * 15) as f32,
-                            (y * 15) as f32,
-                            (z * 15) as f32,
-                        ),
-                        ..default()
-                    })
-                    .insert(NearestNeighbourComponent);
+    let mesh = meshes.add(Cuboid::new(4., 4., 4.));
+    for x in -25..25 {
+        for y in -25..25 {
+            for z in -9..9 {
+                commands.spawn((
+                    Mesh3d(mesh.clone()),
+                    MeshMaterial3d(handles.orange_red.clone()),
+                    Transform::from_xyz((x * 15) as f32, (y * 15) as f32, (z * 15) as f32),
+                    NearestNeighbourComponent,
+                ));
             }
         }
     }
@@ -97,7 +91,7 @@ fn update_mouse_pos(
     let win = window.single();
     let (cam, cam_t) = cam.single();
     if let Some(w_pos) = win.cursor_position() {
-        if let Some(pos) = cam.viewport_to_world(cam_t, w_pos) {
+        if let Ok(pos) = cam.viewport_to_world(cam_t, w_pos) {
             mouse.pos = pos.get_point(900.);
         }
     }
@@ -111,21 +105,21 @@ fn mouse(mouse: Res<Mouse3D>, mut query: Query<&mut Transform, With<Cursor>>) {
 fn color(
     mouse: Res<Mouse3D>,
     treeaccess: Res<NNTree>,
-    mut query: Query<&mut Handle<StandardMaterial>, With<NearestNeighbourComponent>>,
+    mut query: Query<&mut MeshMaterial3d<StandardMaterial>, With<NearestNeighbourComponent>>,
     colors: Res<MaterialHandles>,
 ) {
     for (_, entity) in treeaccess.within_distance(mouse.pos, 100.0) {
         if let Ok(mut handle) = query.get_mut(entity.expect("No entity")) {
-            *handle = colors.black.clone();
+            *handle = colors.black.clone().into();
         }
     }
 }
 
 fn reset_color(
     colors: Res<MaterialHandles>,
-    mut query: Query<&mut Handle<StandardMaterial>, With<NearestNeighbourComponent>>,
+    mut query: Query<&mut MeshMaterial3d<StandardMaterial>, With<NearestNeighbourComponent>>,
 ) {
     for mut handle in &mut query {
-        *handle = colors.orange_red.clone();
+        *handle = colors.orange_red.clone().into();
     }
 }
