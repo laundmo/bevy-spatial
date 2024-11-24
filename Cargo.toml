@@ -2,13 +2,13 @@
 name = "bevy_spatial"
 description = "A crate for tracking bevy entities in spatial indices."
 documentation = "https://docs.rs/bevy_spatial"
-version = "0.9.1"
+version = "0.10.0"
 license = "MIT OR Apache-2.0"
 edition = "2021"
 keywords = ["gamedev", "bevy", "kdtree", "knn", "nearest-neighbour"]
 repository = "https://github.com/laundmo/bevy-spatial"
 readme = "README.md"
-authors = ["laundmo"]
+authors = ["laund <me@laund.moe>"]
 
 [dependencies]
 bevy = { version = "0.15.0-rc.3", default-features = false }

@@ -46,6 +46,7 @@ For more details on usage see [Examples](https://github.com/laundmo/bevy-spatial
 
 | bevy | bevy_spatial |
 | ---- | ------------ |
+| 0.15 | 0.10.0       |
 | 0.14 | 0.9.1        |
 | 0.13 | 0.8.0        |
 | 0.12 | 0.7.0        |
