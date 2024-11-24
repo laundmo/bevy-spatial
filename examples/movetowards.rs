@@ -87,7 +87,7 @@ fn mouseclick(
                                     pos + vec2(xoff as f32 * 16., yoff as f32 * 16.),
                                 )
                                 .unwrap_or(Vec2::ZERO)
-                                .extend(0.0),
+                                .extend(1.0),
                             ..default()
                         },
                     ));
