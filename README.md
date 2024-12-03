@@ -57,4 +57,4 @@ For more details on usage see [Examples](https://github.com/laundmo/bevy-spatial
 | 0.8  | 0.2.1        |
 | 0.7  | 0.1          |
 
-wasm caveats: the rayon acceleration for kdtree is disabled on wasm, making it a bit slower.
+wasm caveats: Since the rayon acceleration for kdtree is enabled by default, but rayon doesn't work on wasm, for projects targeting wasm you'll need to disable default features for bevy-spatial and re-enable `kdtree`

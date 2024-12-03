@@ -13,6 +13,9 @@ use std::marker::PhantomData;
 
 use bevy::prelude::Resource;
 
+#[cfg(all(feature = "kdtree_rayon", target_arch = "wasm32"))]
+compile_error!("bevy-spatial feature \"kdtree_rayon\" is incompatible with target_arch = \"wasm32\" builds. Disable default-features and enable kdtree");
+
 macro_rules! kdtree_impl {
     ($pt:ty, $treename:ident) => {
         impl KdPoint for $pt {
@@ -105,10 +108,10 @@ macro_rules! kdtree_impl {
                 data: impl Iterator<Item = (Self::Point, bool)>,
                 _: impl Iterator<Item = Entity>,
             ) {
-                #[cfg(not(target_arch = "wasm32"))]
+                #[cfg(feature = "kdtree_rayon")]
                 let tree =
                     KdTreeN::par_build_by_ordered_float(data.map(|(p, _)| p).collect::<Vec<_>>());
-                #[cfg(target_arch = "wasm32")]
+                #[cfg(any(not(feature = "kdtree_rayon"), target_arch = "wasm32"))]
                 let tree =
                     KdTreeN::build_by_ordered_float(data.map(|(p, _)| p).collect::<Vec<_>>());
                 self.tree = tree;
