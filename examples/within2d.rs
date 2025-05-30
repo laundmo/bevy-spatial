@@ -111,29 +111,19 @@ fn mouse(
     mut commands: Commands,
     mouse: Res<Mouse2D>,
     treeaccess: Res<NNTree>,
-    mut transform: Single<&mut Transform, With<Cursor>>,
     ms_buttons: Res<ButtonInput<MouseButton>>,
+    mut query: Query<&mut Sprite, With<NearestNeighbourComponent>>,
 ) {
     let use_mouse = ms_buttons.pressed(MouseButton::Left);
 
-    if let Some((_pos, entity)) = treeaccess.nearest_neighbour(mouse.pos) {
-        transform.translation = mouse.pos.extend(0.0); // I don't really know what this is here for
+    let p1 = mouse.pos;
+    let p2 = Vec2::from([100.0, -100.0]);
 
+    for (_, entity) in treeaccess.within(p1, p2) {
         if use_mouse {
             commands.entity(entity.unwrap()).despawn();
         }
-    }
-}
 
-fn color(
-    treeaccess: Res<NNTree>,
-    mouse: Res<Mouse2D>,
-    mut query: Query<&mut Sprite, With<NearestNeighbourComponent>>,
-) {
-    for (_, entity) in treeaccess.within_distance(mouse.pos, 50.0) {
-        if let Ok(mut sprite) = query.get_mut(entity.unwrap()) {
-            sprite.color = Color::BLACK;
-        }
     }
 }
 
