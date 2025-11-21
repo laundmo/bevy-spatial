@@ -132,7 +132,7 @@ impl<Comp, Set: SystemSet, Schedule: ScheduleLabel + Clone> AutomaticUpdate<Comp
     ///
     /// Note: using [`TransformMode::GlobalTransform`] might cause double frame-delays
     /// as Transform->GlobalTransform propagation happens in the
-    /// [`TransformPropagate`](bevy::transform::TransformSystem::TransformPropagate) [`SystemSet`] in [`PostUpdate`](bevy::app::PostUpdate).
+    /// [`TransformPropagate`](bevy::transform::TransformSystems::Propagate) [`SystemSet`] in [`PostUpdate`](bevy::app::PostUpdate).
     /// You can order this plugins systems by modifying the default [`SpatialSet`]
     /// or using your own [`SystemSet`] by calling [`AutomaticUpdate::with_set`](Self::with_set)
     #[must_use]
