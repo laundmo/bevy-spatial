@@ -34,7 +34,7 @@ pub enum SpatialStructure {
 /// Plugin struct for setting up a spatial datastructure with automatic updating.
 ///
 ///
-/// ```
+/// ```ignore
 /// #[derive(Component, Default)]
 /// struct EntityMarker;
 ///

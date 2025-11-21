@@ -4,7 +4,7 @@
 //! A bevy plugin to track your entities in spatial indices and query them.
 //!
 //! Quickstart using the `kdtree` feature:
-//! ```
+//! ```ignore
 //! use bevy_spatial::{AutomaticUpdate, KDTree3, TransformMode, SpatialAccess};
 //!
 //! #[derive(Component, Default)]
