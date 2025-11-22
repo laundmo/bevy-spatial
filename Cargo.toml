@@ -18,7 +18,7 @@ typenum = { version = "1.18.0" }
 num-traits = { version = "0.2.19" }
 
 [target.'cfg(all(target_family = "wasm", any(target_os = "unknown", target_os = "none")))'.dependencies]
-getrandom = { version = "^0.2", features = ["js"] }
+getrandom = { version = "0.3", features = ["wasm_js"] }
 
 [features]
 default = ["kdtree_rayon"]
