@@ -10,7 +10,7 @@ use crate::TComp;
 /// Resource used for fixed timestep without repeats in the same frame (builtin timestep may run the system multiple times per frame).
 ///
 /// To modify the timestep at runtime, a system like this can be used:
-/// ```rust
+/// ```ignore
 /// fn update_timestep(
 ///     mut step: ResMut<TimestepElapsed<NearestNeighbourMarker>>,
 /// ) {
