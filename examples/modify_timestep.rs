@@ -34,7 +34,7 @@ fn setup(mut commands: Commands) {
     commands.spawn((
         Text("Click mouse to change rate".to_string()),
         TextFont {
-            font_size: 30.0,
+            font_size: FontSize::Px(30.0),
             ..default()
         },
         TextColor(Color::BLACK),

@@ -41,7 +41,6 @@ fn setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-    mut ambient_light: ResMut<AmbientLight>,
 ) {
     let handles = MaterialHandles {
         orange_red: materials.add(Color::from(csscolors::ORANGE_RED)),
@@ -50,8 +49,11 @@ fn setup(
     };
     commands.insert_resource(handles.clone());
 
-    ambient_light.color = Color::WHITE;
-    ambient_light.brightness = 500.;
+    commands.insert_resource(GlobalAmbientLight {
+        color: Color::WHITE,
+        brightness: 500.,
+        ..default()
+    });
 
     commands.spawn((
         Camera3d::default(),

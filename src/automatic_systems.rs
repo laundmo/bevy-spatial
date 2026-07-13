@@ -7,7 +7,10 @@ use crate::{
 };
 
 use bevy::{
-    ecs::schedule::{ScheduleLabel, SystemSet},
+    ecs::{
+        component::Mutable,
+        schedule::{ScheduleLabel, SystemSet},
+    },
     prelude::*,
 };
 
@@ -29,7 +32,7 @@ pub(crate) struct AutoT<SpatialDS>(PhantomData<SpatialDS>);
 impl<SpatialDS> AutoT<SpatialDS>
 where
     GlamVec<SpatialDS>: VecFromTransform,
-    SpatialDS: UpdateSpatialAccess + Resource,
+    SpatialDS: UpdateSpatialAccess + Resource<Mutability = Mutable>,
     <SpatialDS as SpatialAccess>::Point: From<(Entity, GlamVec<SpatialDS>)>,
     SpatialDS::Comp: Component,
 {
@@ -61,7 +64,7 @@ pub(crate) struct AutoGT<SpatialDS>(PhantomData<SpatialDS>);
 impl<SpatialDS> AutoGT<SpatialDS>
 where
     GlamVec<SpatialDS>: VecFromGlobalTransform,
-    SpatialDS: UpdateSpatialAccess + Resource,
+    SpatialDS: UpdateSpatialAccess + Resource<Mutability = Mutable>,
     <SpatialDS as SpatialAccess>::Point: From<(Entity, GlamVec<SpatialDS>)>,
     SpatialDS::Comp: Component,
 {
